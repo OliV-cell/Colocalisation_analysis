@@ -13,5 +13,9 @@ Nevertheless, those script can be useful to anyone who desire to make a automati
 ## Data avaibility
 The image data are available here (putting the link) so anybody can reproduce the output data by themself. It is importent to note the fact that these script are highly adapted to my images files names, therefor, a ritten toturial on the script is available here (putting the link)
 
+## Statistical analisys
+
+All executed statistical analysis have also been given. Feel free to used them if needed or if youy want to check the code. For the record, the analisis where done in Rstudio an in Julia with the Antigravity IDE 
+
 ## IA use disclamer
 I have been using Gemini pro 3 as an assistent to find critical error and generate one key fonction in my script. Therefor, only 5% of this script as been ritten by an IA assistant. 
