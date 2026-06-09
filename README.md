@@ -11,7 +11,7 @@ Finally, all colocalization analyses use the [Renyi's entropy](https://www-scien
 Those scripts are highly specialized for this article (Put the name); nevertheless, they can be used to implement semi-automated colocalization for any image data.
 
 ## Data availability
-The image data are available here (link provided), so anyone can reproduce the output data themselves. It is important to note that these scripts are highly adapted to my image files' names; therefore, a tutorial on the colocalisation script is available here [https://youtu.be/CHfANNardjs]
+The image data are available here (link provided), so anyone can reproduce the output data themselves. It is important to note that these scripts are highly adapted to my image files' names; therefore, a tutorial on the colocalisation script is available here https://youtu.be/CHfANNardjs
 
 ## Statistical analysis
 All executed statistical analyses have also been given. Feel free to use them if needed or to check the code. For the record, the analysis was done in RStudio and in Julia with the Antigravity IDE. 
