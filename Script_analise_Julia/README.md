@@ -4,5 +4,6 @@ and Julia seems as a great choose, since it kinda solve the 2 languages problem.
 package or by addapting the code yourself.
 
 And, Julia make beatifull graph : 
-
-<img width="1438" height="1480" alt="Heatmap_colocalisation_Dvir48_CTAC_CTAT_sensforward" src="https://github.com/user-attachments/assets/f626b884-5884-43c7-9238-a9eb972e85d8" />
+<p align="center">
+<img width="719" height="740" alt="Heatmap_colocalisation_Dvir48_CTAC_CTAT_sensforward" src="https://github.com/user-attachments/assets/f626b884-5884-43c7-9238-a9eb972e85d8" />
+<p>
