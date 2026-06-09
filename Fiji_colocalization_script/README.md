@@ -7,6 +7,8 @@ For record, im didnt activate the Batch mode for the sake of visualisation but t
 setBatchMode(true);
 ```
 Can be added without much issue
+Furthermore, the 3D colocalisation macro works on exactly the same logic as the 2D macro. The only difference is that you will need 3 additional files to store the Z-stack image that will be analysed. 
+So you will need 2 files (2D & 3D) for each category (Coloc_score, Coloc_graph, Tiff_bin)
 
 
 
