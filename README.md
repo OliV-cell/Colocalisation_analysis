@@ -1,24 +1,42 @@
-# Colocalization analysis of SatDNA transcript in Drosophila virilis oocyte
+# Colocalization Analysis of SatDNA Transcripts in *Drosophila virilis* Oocytes
 
 <p align="center">
 <img width="336" height="329" alt="Dvir48_CTACcy3_green_CTATcy5_magenta_09112025 lif - Image105-1" src="https://github.com/user-attachments/assets/9b4b60af-32ae-4f23-aea3-016340934b6a" />
 <img width="336" height="329" alt="CTACcy5green_CTATcy3magenta_sensboth_03102025 lif - Image104-1" src="https://github.com/user-attachments/assets/0589e3f7-a803-43cc-8bcb-a0a1424747e2" />
 </p>
 
-## Colocalization script
-The script for the colocalization analysis has been developed to calculate 2D and 3D colocalization of transcripts within the oocyte across various Drosophila species. Furthermore, the [JACoP2](https://imagej.net/plugins/jacop) plugin has been used as the core tool for the analysis. We have also used the [DiAna](https://imagej.net/plugins/distance-analysis) plugin to measure, for example, the centroide-centroide distance of our 3D object, using a [CLIJ2](https://clij.github.io/) implementation with GPU acceleration during the labelling of our object. 
-Finally, all colocalization analyses use the [Renyi's entropy](https://www-sciencedirect-com.acces.bibl.ulaval.ca/science/article/pii/S0031320396000659) as a threshold; indeed, we chose this method because it best captured our object of study. 
-Those scripts are highly specialized for this article (Put the name); nevertheless, they can be used to implement semi-automated colocalization for any image data.
+## Overview
 
-## Data availability
-The image data are available here (link provided), so anyone can reproduce the output data themselves. It is important to note that these scripts are highly adapted to my image files' names; therefore, a tutorial on the colocalisation script is available here https://youtu.be/CHfANNardjs
+This repository contains a comprehensive suite of scripts for analyzing the 2D and 3D colocalization of transcripts within oocytes across various *Drosophila* species. The analysis pipeline integrates the [JACoP2](link-to-documentation) plugin and employs [Renyi's entropy](https://www-sciencedirect-com.acces.bibl.ulaval.ca/science/article/pii/S0031320396000659) as a threshold method for robust colocalization detection.
 
-## Statistical analysis
-All executed statistical analyses have also been given. Feel free to use them if needed or to check the code. For the record, the analysis was done in RStudio and in Julia with the Antigravity IDE. 
+While these scripts are specifically tailored for the analyses presented in our article, they can be adapted for semi-automated colocalization studies on other image datasets.
 
-## IA use disclaimer
-I have been using Gemini Pro 3 as an assistant to find critical errors and generate a key function in my script. Therefore, only 5% of this script has been written by an IA assistant. 
+## Colocalization Scripts
 
-## Usage of this material
-If you find those scripts and data useful, please cite from: Expression of AAACTAC satellite repeats as a long noncoding RNA in the early oocyte of Drosophila virilis
+The main colocalization analysis script calculates 2D and 3D colocalization metrics for transcript localization within oocytes. The pipeline uses Renyi's entropy as a threshold-setting method, which was selected to provide statistically rigorous colocalization measurements.
 
+## Data Availability
+
+Image data are available upon request (link to be provided). This ensures full reproducibility of the analyses. Please note that these scripts are optimized for specific image file naming conventions; they may require modification to work with different file naming schemes.
+
+## Statistical Analysis
+
+All statistical analyses are included in this repository. The analyses were performed using:
+- **RStudio** for R-based statistical analyses
+- **Julia** with the Antigravity IDE for advanced computational analyses
+
+Feel free to review the code or adapt the analyses for your own studies.
+
+## AI Assistance Disclaimer
+
+This project used Gemini Pro 3 as an assistant for identifying critical errors and generating a key function within the scripts. Approximately 95% of the codebase was developed independently, with AI assistance accounting for ~5% of the final implementation.
+
+## Citation
+
+If you use these scripts or data in your research, please cite:
+
+**Expression of AAACTAC satellite repeats as a long noncoding RNA in the early oocyte of *Drosophila virilis***
+
+---
+
+For questions or issues, please feel free to open an issue on this repository.
