@@ -17,48 +17,7 @@ The main colocalization analysis script calculates 2D and 3D colocalization metr
 
 ## Reperotory structure
 
-```
-Colocalisation_analysis/
-├── README.md
-├── .gitignore
-├── License
-├── Project.toml
-├── Manifest.toml
-├── colocalization_2D_analysis.jl
-├── colocalization_3D_analysis.jl
-├── colocalization_functions.jl
-├── image_preprocessing.jl
-├── entropy_threshold_method.jl
-├── utilities.jl
-├── config.jl
-├── results_summary.jl
-├── visualization.jl
-├── data_import.jl
-├── normalization.jl
-├── statistical_tests.jl
-├── quality_control.jl
-├── output_formatter.jl
-├── logging_config.jl
-├── debug_utils.jl
-│
-├── R/
-│   ├── statistical_analysis.R
-│   ├── plot_generation.R
-│   ├── data_processing.R
-│   ├── hypothesis_tests.R
-│
-├── ImageJ_Macros/
-│   ├── preprocessing_macro.ijm
-│   ├── segmentation_macro.ijm
-│   ├── roi_extraction_macro.ijm
-│   ├── batch_processing_macro.ijm
-│
-└── docs/
-    ├── ANALYSIS_GUIDE.md
-    ├── API_REFERENCE.md
-    ├── TROUBLESHOOTING.md
-    └── DATA_FORMAT.md
-```
+
 ## Data Availability
 
 Image data are available upon request (link to be provided). This ensures full reproducibility of the analyses. Please note that these scripts are optimized for specific image file naming conventions; they may require modification to work with different file naming schemes.
