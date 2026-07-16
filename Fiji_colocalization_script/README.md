@@ -1,9 +1,5 @@
 # Colocalization Macro Tutorial
 
-## Overview
-
-This repository contains ImageJ/Fiji macros for analyzing fluorescence microscopy image colocalization in both 2D and 3D. The macros automate the quantification of spatial overlap between multiple color channels.
-
 ## Video Tutorial
 
 A comprehensive tutorial for the basic 2D colocalization macro is available here: [Colocalization Analysis Tutorial](https://youtu.be/CHfANNardjs)
@@ -65,7 +61,7 @@ The 3D macro operates on the same logic as the 2D version but processes volumetr
 The macros generate:
 - **Coloc_score**: Quantitative colocalization metrics stored as text files or spreadsheets
 - **Coloc_graph**: Graphical representations of colocalization patterns
-- **Tiff_bin**: Thresholded binary images showing colocalized regions
+- **Tiff_bin**: Tiff image data
 
 ## Customization
 
@@ -79,7 +75,3 @@ Both 2D and 3D macros are fully customizable:
 - The macros are designed to work with standard fluorescence microscopy data
 - Ensure consistent image preprocessing (background subtraction, alignment, etc.) before running the analysis
 - Results depend on proper channel registration and imaging parameters
-
-## Support
-
-For questions or issues with the macro implementation, refer to the video tutorial or consult the Fiji documentation on macro scripting.
