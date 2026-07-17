@@ -1,42 +1,24 @@
 ###########################
-#Script analyse comparaison
-#CTAC avec Virlis, américana
-#novamexicana et lumeil
+#Comparison analysis script
+#CTAC with Virlis, americana
+#novamexicana and lummei
 ################################
 
-#activation des packages
+#activate packages
 
 library(car)
-library(multcompView)
 library(dplyr)
-library(agricolae)
-library(multcomp)
-library(rcompanion)
 library(tidyr)
-library(nlstools)
-library(psych)
-library(qpcR)
-library(emmeans)
-library(multcomp)
-library(multcompView)
-library(marginaleffects)
-library(FSA)
-
-library(gvlma)
-library(stargazer)
+library(mgcv)
 library(performance)
 library(see)
-#représentation graphique
-library(ggplot2)
-library(ggpubr)
-library(ggpmisc)
-library(pammtools)
-
-library(Distance)
 library(dsm)
 
+#graphical representation
+library(ggplot2)
+
 ########################################################
-#ouverture des fichier
+#opening files
 
 data_dlumei <- read.csv("Donner_Dlumei_CTAC_antisens.csv",
                         sep = ";", dec = ",", header =TRUE)
@@ -51,23 +33,23 @@ data_damer  <- read.csv("Donner_Damer_CTAC_antisens.csv",
                        sep = ";", dec = ",", header =TRUE)
 
 
-#traitement Dlumei
-decompte <- function(data_source, data_puit){
+#Dlumei processing
+count_occurrences <- function(data_source, data_well){
   for (i in c(3:10)){
     #null
-    data_puit[[i-2,1]] <- length(which(data_source[,i] == "rien"))
+    data_well[[i-2,1]] <- length(which(data_source[,i] == "rien"))
     
-    #faible
-    data_puit[[i-2,2]] <- length(which(data_source[,i] == "faible"))
+    #low
+    data_well[[i-2,2]] <- length(which(data_source[,i] == "faible"))
     
-    #moyen
-    data_puit[[i-2,3]] <- length(which(data_source[,i] == "moyen"))
+    #medium
+    data_well[[i-2,3]] <- length(which(data_source[,i] == "moyen"))
     
-    #elever
-    data_puit[[i-2,4]] <- length(which(data_source[,i] == "elever"))
+    #high
+    data_well[[i-2,4]] <- length(which(data_source[,i] == "elever"))
   }
   
-  return(data_puit)
+  return(data_well)
   
 }
 
@@ -79,24 +61,24 @@ Dlumei_1 <- matrix( nrow = 8, ncol = 4)
 
 Dlumei_2 <- matrix( nrow = 8, ncol = 4)
 
-Dlumei_1 <- decompte(data_source = data_dlumei,data_puit = Dlumei_1)
-Dlumei_2 <- decompte(data_source = data_dlumei,data_puit = Dlumei_2)
+Dlumei_1 <- count_occurrences(data_source = data_dlumei,data_well = Dlumei_1)
+Dlumei_2 <- count_occurrences(data_source = data_dlumei,data_well = Dlumei_2)
 
-noms_matrices <- c("Dlumei_1","Dlumei_2")
+matrix_names <- c("Dlumei_1","Dlumei_2")
 
-total_observations <- sum(sapply(mget(noms_matrices), sum, na.rm = TRUE))
+total_observations <- sum(sapply(mget(matrix_names), sum, na.rm = TRUE))
 
 print(total_observations)
 
-matrice_fusionnee <- Reduce("+", mget(noms_matrices))
+merged_matrix <- Reduce("+", mget(matrix_names))
 
-comptage_par_ligne <- rowSums(matrice_fusionnee, na.rm = TRUE)
+count_per_row <- rowSums(merged_matrix, na.rm = TRUE)
 
-noms_stades <- paste("Stade", 3:(3 + length(comptage_par_ligne) - 1))
-names(comptage_par_ligne) <- noms_stades
+stage_names <- paste("Stage", 3:(3 + length(count_per_row) - 1))
+names(count_per_row) <- stage_names
 
 
-print(comptage_par_ligne)
+print(count_per_row)
 
 data_score_lumei <- data.frame(score_1 = rep(0,8),
                                
@@ -104,10 +86,10 @@ data_score_lumei <- data.frame(score_1 = rep(0,8),
                                
                                stade = c(3:10),
                                
-                               row.names = c("stade 3",
-                                             "stade 4","stade 5","stade 6",
-                                             "stade 7","stade 8","stade 9",
-                                             "stade 10"))
+                               row.names = c("stage 3",
+                                             "stage 4","stage 5","stage 6",
+                                             "stage 7","stage 8","stage 9",
+                                             "stage 10"))
 
 for ( i in c(1:8)){
   
@@ -115,19 +97,19 @@ for ( i in c(1:8)){
   
   data_score_lumei[[i,2]] <- (Dlumei_2[i,2] + 2*Dlumei_2[i,3] + 3*Dlumei_2[i,4])
   
-  print(paste("Boucle",i,"fait"))
+  print(paste("Loop",i,"done"))
 }
 
-data_score_lumei_normalisé <- data_score_lumei
+data_score_lumei_normalized <- data_score_lumei
 
 for (i in c(1:8)){
   
-  data_score_lumei_normalisé[[i,1]] <- data_score_lumei_normalisé[i,1]/(sum(Dlumei_1[i,1:4]) +1)
-  data_score_lumei_normalisé[[i,2]] <- data_score_lumei_normalisé[i,2]/(sum(Dlumei_2[i,1:4]) +1)
+  data_score_lumei_normalized[[i,1]] <- data_score_lumei_normalized[i,1]/(sum(Dlumei_1[i,1:4]) +1)
+  data_score_lumei_normalized[[i,2]] <- data_score_lumei_normalized[i,2]/(sum(Dlumei_2[i,1:4]) +1)
   
 }
 
-data_dlumei <- data_score_lumei_normalisé
+data_dlumei <- data_score_lumei_normalized
 
 data_dlumei[nrow(data_dlumei) + 1, ] <- list(1,0)
 
@@ -144,7 +126,7 @@ data_dlumei <- data_dlumei %>%
     values_to = "score"
   )
 
-#explo data
+#data exploration
 
 plot(data_dvir$score)
 
@@ -162,75 +144,78 @@ hist(data_damer$score)
 
 hist(data_dlumei$score)
 
-data_concaténé <- rbind(data_dvir, data_dnova, data_damer, data_dlumei)
+concatenated_data <- rbind(data_dvir, data_dnova, data_damer, data_dlumei)
 
-boxplot(data_concaténé$score ~ data_concaténé$sp)
-leveneTest(data_concaténé$score ~ data_concaténé$sp)
+concatenated_data <- rename(concatenated_data, stage = stade)
+concatenated_data <- rename(concatenated_data, strand = brin)
 
-#essaie avec GAM
+boxplot(concatenated_data$score ~ concatenated_data$sp)
+leveneTest(concatenated_data$score ~ concatenated_data$sp)
 
-data_concaténé$sp <- as.factor(data_concaténé$sp)
+#try with GAM
 
-modele_combiné <- gam(list(score ~ sp + s(stade, by = sp, k = 10), 
-    ~ s(stade)), 
-  data = data_concaténé,
+concatenated_data$sp <- as.factor(concatenated_data$sp)
+
+combined_model <- gam(list(score ~ sp + s(stage, by = sp, k = 10), 
+    ~ s(stage)), 
+  data = concatenated_data,
   optimizer = c("outer", "newton"),
   method = "REML", 
   family = gaulss(),
   control = list(maxit = 1000)
 )
 
-#Fonction choix du modèle
+#Model selection function
 
 par(mfrow=c(2,2))
 
-plot(modele_combiné, 
+plot(combined_model, 
      pages = 1, 
      scheme = 1, 
      all.terms = TRUE)
 
-summary.gam(modele_combiné)
+summary.gam(combined_model)
 
 par(mfrow=c(2,2))
 
-gam.check(modele_combiné)
+gam.check(combined_model)
 
-k.check(modele_combiné)
+k.check(combined_model)
 
-performance(modele_combiné)
+performance(combined_model)
 
-concurvity(modele_combiné, full = FALSE)
+concurvity(combined_model, full = FALSE)
 
-vis_concurvity(modele_combiné, type = "estimate")
+vis_concurvity(combined_model, type = "estimate")
 
-model_performance(modele_combiné)
+model_performance(combined_model)
 
-stade_dense <- seq(min(data_concaténé$stade), 
-                   max(data_concaténé$stade), 
+dense_stage <- seq(min(concatenated_data$stage), 
+                   max(concatenated_data$stage), 
                    length.out = 200)
 
 df_predict_combine <- expand.grid(
-  stade = stade_dense,
-  sp = unique(data_concaténé$sp) 
+  stage = dense_stage,
+  sp = unique(concatenated_data$sp) 
 )
 
-preds_smooth <- predict(modele_combiné, newdata = df_predict_combine, 
+preds_smooth <- predict(combined_model, newdata = df_predict_combine, 
                         se.fit = TRUE, type = "link")
 
-ilink <- family(modele_combiné)$linkinv
+ilink <- family(combined_model)$linkinv
 
 df_predict_combine <- df_predict_combine %>%
   mutate(
-    fit   = preds_smooth$fit[,1],  # Moyenne
+    fit   = preds_smooth$fit[,1],  # Mean
     upper = preds_smooth$fit[,1] + (1.96 * preds_smooth$se.fit[,1]),
     lower = preds_smooth$fit[,1] - (1.96 * preds_smooth$se.fit[,1])
   )
 
-# calcule des R^2 par sp
+# R^2 calculation per sp
 
-data_concaténé$preds <- predict(modele_combiné, type = "response")[,1]
+concatenated_data$preds <- predict(combined_model, type = "response")[,1]
 
-tableau_R2 <- data_concaténé %>%
+R2_table <- concatenated_data %>%
   group_by(sp) %>%
   summarize(
     RSS = sum((score - preds)^2),                  
@@ -238,17 +223,17 @@ tableau_R2 <- data_concaténé %>%
     R2  = round(1 - (RSS / TSS), 4)               
   )
 
-print(tableau_R2)
+print(R2_table)
 
 ######################
-#statistique de différence général, par stade et pente d'expression
+#general difference statistics, by stage and expression slope
 
-anova <- anova(modele_combiné)
-anova.gam(modele_combiné)
+anova <- anova(combined_model)
+anova.gam(combined_model)
 
-p_val_brin <- anova$pTerms.pv[1]
+p_val_strand <- anova$pTerms.pv[1]
 
-noms_legendes <- c(
+legend_names <- c(
   "Dvir48" = "D.Virilis",
   "Dnova"  = "D.novamexicana",
   "Damer" = "D.americana",
@@ -259,38 +244,38 @@ noms_legendes <- c(
 
 windowsFonts( A = windowsFont("Arial"))
 
-#représentation graphique
+#graphical representation
 plot_GAM <- ggplot() + 
   
-  geom_point(data = data_concaténé, 
-             aes(x = stade, y = score, color = sp),
+  geom_point(data = concatenated_data, 
+             aes(x = stage, y = score, color = sp),
              alpha = 0.6, position = position_jitter(width = 0.1)) + 
   geom_ribbon(data = df_predict_combine, 
-              aes(x = stade, ymin = lower, ymax = upper, fill = sp), 
+              aes(x = stage, ymin = lower, ymax = upper, fill = sp), 
               alpha = 0.09) +
   geom_line(data = df_predict_combine, 
-            aes(x = stade, y = fit, color = sp),
+            aes(x = stage, y = fit, color = sp),
             linewidth = 1.2) +
   
-  scale_color_manual(labels = noms_legendes,
+  scale_color_manual(labels = legend_names,
                      values = c("Dvir48" = "red", 
                                 "Dnova" = "blue", 
                                 "Damer" = "orange",
                                 "Dlumei" = "darkgreen")) +
   
-  scale_fill_manual(labels = noms_legendes,
+  scale_fill_manual(labels = legend_names,
                     values = c("Dvir48" = "red", 
                                "Dnova" = "blue", 
                                "Damer" = "orange",
                                "Dlumei" = "darkgreen")) +
   
   labs(
-    x = "Stade de dévelopement des oeufs",
-    y = "Score d'expression normalisé",
-    title = "Évolution de la transcription des LncARN sens de AAACTAC pour \n D.Virilis, D.americana, D.nocamexicana & D.lummei",
-    subtitle = "Les sondes utilisé était antisens",
-    color = "Espèces",
-    fill = "Espèces"
+    x = "Egg developmental stage",
+    y = "Normalized expression score",
+    title = "Evolution of forward LncRNA transcription of AAACTAC for \n D.Virilis, D.americana, D.novamexicana & D.lummei",
+    subtitle = "The probes used were antisense",
+    color = "Species",
+    fill = "Species"
   ) +
     
   scale_x_continuous(breaks = seq(0, 10, by = 1)) +
@@ -317,22 +302,22 @@ plot_GAM <- ggplot() +
   annotate("rect", xmin = 9.2, xmax = Inf, ymin = 2.8, ymax = 4.5,
            alpha = 1, fill = "white") +
   
-  #annotate("text", x = Inf, y = Inf, label = paste0("Global ANOVA: p = ", format.pval(p_val_brin, digits = 2)), 
+  #annotate("text", x = Inf, y = Inf, label = paste0("Global ANOVA: p = ", format.pval(p_val_strand, digits = 2)), 
            #hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic") + 
   
-  annotate("text", x = Inf, y = 4.4, label = paste0("R² = ", round(tableau_R2[4,4], digits = 3), "***"), 
+  annotate("text", x = Inf, y = 4.4, label = paste0("R² = ", round(R2_table[4,4], digits = 3), "***"), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "red") + 
   
-  annotate("text", x = Inf, y = 4, label = paste0("R² = ", round(tableau_R2[3,4], digits = 3), "***" ), 
+  annotate("text", x = Inf, y = 4, label = paste0("R² = ", round(R2_table[3,4], digits = 3), "***" ), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "blue") +
   
-  annotate("text", x = Inf, y = 3.6, label = paste0("R² = ", round(tableau_R2[1,4], digits = 3) , "***"), 
+  annotate("text", x = Inf, y = 3.6, label = paste0("R² = ", round(R2_table[1,4], digits = 3) , "***"), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "orange") + 
   
-  annotate("text", x = Inf, y = 3.2, label = paste0("R² = ", round(tableau_R2[2,4], digits = 3) , "***"), 
+  annotate("text", x = Inf, y = 3.2, label = paste0("R² = ", round(R2_table[2,4], digits = 3) , "***"), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "darkgreen")
   
@@ -340,32 +325,32 @@ plot_GAM <- ggplot() +
 print(plot_GAM)
 
 ##########################################
-#comparaison des courbe avec tets non-paramétrique 
-#manque de donnée
+#comparison of curves with non-parametric tests 
+#lack of data
 
-tableau_pvalues <- data.frame()
+pvalues_table <- data.frame()
 
 for (s in 3:10) {
-  donnees_stade <- subset(data_concaténé, stade == s)
+  stage_data <- subset(concatenated_data, stage == s)
   
-  if(length(unique(donnees_stade$sp)) > 1) {
+  if(length(unique(stage_data$sp)) > 1) {
     
-    fit <- aov(score ~ sp, data = donnees_stade)
+    fit <- aov(score ~ sp, data = stage_data)
     
     tukey <- TukeyHSD(fit)$sp
 
     temp <- data.frame(
-      Stade = s,
-      Comparaison = rownames(tukey),
+      Stage = s,
+      Comparison = rownames(tukey),
       p_value = round(tukey[, "p adj"], 4)
     )
-    tableau_pvalues <- rbind(tableau_pvalues, temp)
+    pvalues_table <- rbind(pvalues_table, temp)
   }
 }
 
-print(tableau_pvalues)
+print(pvalues_table)
 
-signif_data <- tableau_pvalues %>%
+signif_data <- pvalues_table %>%
   filter(p_value < 0.05) %>%
   mutate(
     label = case_when(
@@ -376,11 +361,11 @@ signif_data <- tableau_pvalues %>%
     )
   )
 
-h_crochet <- 3
+h_bracket <- 3
 
 plot_GAM +
   
-  #stade3-4-5 
+  #stage3-4-5 
   
   annotate("rect", xmin = 2.5, xmax = 5.2, ymin = 0, ymax = 3,
            linetype = "dashed", color = "black", fill = NA) +
@@ -389,23 +374,16 @@ plot_GAM +
            label = "***", size = 5) +
   
   
-  #stade7
+  #stage7
   
-  annotate("segment", x = 6.8, xend = 7.2, y = h_crochet, yend = h_crochet, 
+  annotate("segment", x = 6.8, xend = 7.2, y = h_bracket, yend = h_bracket, 
            linetype = "dashed", color = "black") +
   
-  annotate("segment", x = 6.8, xend = 6.8, y = 0.49, yend = h_crochet, 
+  annotate("segment", x = 6.8, xend = 6.8, y = 0.49, yend = h_bracket, 
            linetype = "dashed", color = "black") +
   
-  annotate("segment", x = 7.2, xend = 7.2, y = 1.025, yend = h_crochet, 
+  annotate("segment", x = 7.2, xend = 7.2, y = 1.025, yend = h_bracket, 
            linetype = "dashed", color = "black") +
   
-  annotate("text", x = 7, y = h_crochet + 0.3, 
+  annotate("text", x = 7, y = h_bracket + 0.3, 
            label = signif_data$label[4], size = 5) 
-s
-
-
-
-
-
-

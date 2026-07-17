@@ -15,7 +15,7 @@ folder_direction_image_well = getDirectory("Enter the link to the folder where i
 folder_direction_data_image_zstack = getDirectory("Enter the link to the folder where colocalization factor files will be stored for Voxel analysis");
 folder_direction_data_graph_zstack = getDirectory("Enter the link to the folder where graph data files will be stored for Voxel analysis");
 
-folder_direction_data_image_image_to_image = getDirectory("Enter the link to the folder where colocalization factor files will be stored for single image");
+folder_direction_data_image_to_image = getDirectory("Enter the link to the folder where colocalization factor files will be stored for single image");
 folder_direction_data_graph_image_to_image = getDirectory("Enter the link to the folder where graph data files will be stored for single image");
 
 filename = getString("Enter the file name with type", "Ex: Dvirilis_hook_.lif");
@@ -241,7 +241,7 @@ for ( n = 0; n < number_of_series; n++) {
 	    
 		// Opening the plugin and launching the calculation of Pearson overlap MM cytofluo ICA and CCF
 		
-		 run("JACoP ", "imga=[" + "C2-Zstack" + "_Series_" + j + name + ".tif" + "] imgb=[" + "C3-Zstack" + "_Series_" + j + name + ".tif" + "] thra=" + zthresholda + "  thrb=" + zthresholdb + " pearso[...]
+		 run("JACoP ", "imga=[" + "C2-Zstack" + "_Series_" + j + name + ".tif" + "] imgb=[" + "C3-Zstack" + "_Series_" + j + name + ".tif" + "] thra=" + zthresholda + "  thrb=" + zthresholdb + " pearson overlap mm ccf=100 cytofluo ica");
 		 //Closing unnecessary windows
 		 
 		 selectWindow("ICA A (C2-Zstack" + "_Series_" + j + name + ".tif)");
@@ -308,103 +308,9 @@ for ( n = 0; n < number_of_series; n++) {
 		 
 		 // --- JACoP WINDOW KILLER ---
 	// This uses JavaScript to close windows that ImageJ doesn't see
-	eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/[...]
-		 
-	// Volume analysis with DIANA
-	
-		open(zstacka);
-	
-		selectImage("C2-Zstack" + "_Series_" + j + name + ".tif");
-		
-Ext.CLIJ2_clear();
-		
-		Ext.CLIJ2_push("C2-Zstack" + "_Series_" + j + name + ".tif");
+	eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/02/03') != -1) { frames[i].dispose(); } }"); 
 
-		Ext.CLIJ2_voronoiOtsuLabeling("C2-Zstack" + "_Series_" + j + name + ".tif", label_image_C2, 2, 2);
-		
-		Ext.CLIJ2_pull(label_image_C2);
-		
-		Ext.CLIJ2_push(label_image_C2);
-		
-		Ext.CLIJ2_mergeTouchingLabels(label_image_C2, label_merged_C2);
-		
-		Ext.CLIJ2_pull(label_merged_C2);
-		
-		selectWindow(label_merged_C2);
-		
-		rename("Mask_Objects_C2-Zstack" + "_Series_" + j + name + ".tif");
-		
-		open(zstackb);
-	
-		selectImage("C3-Zstack" + "_Series_" + j + name + ".tif");
-		
-		Ext.CLIJ2_push("C3-Zstack" + "_Series_" + j + name + ".tif");
 
-		Ext.CLIJ2_voronoiOtsuLabeling("C3-Zstack" + "_Series_" + j + name + ".tif", label_image_C3, 2, 2);
-		
-		Ext.CLIJ2_pull(label_image_C3);
-		
-		Ext.CLIJ2_push(label_image_C3);
-		
-		Ext.CLIJ2_mergeTouchingLabels(label_image_C3, label_merged_C3);
-
-		Ext.CLIJ2_pull(label_merged_C3);
-		
-		selectWindow(label_merged_C3);
-		
-		rename("Mask_Objects_C3-Zstack" + "_Series_" + j + name + ".tif");
-	
-		selectImage("C2-Zstack" + "_Series_" + j + name + ".tif");
-		
-		getVoxelSize(width, height, depth, unit);
-		
-		selectImage("Mask_Objects_C2-Zstack" + "_Series_" + j + name + ".tif");
-		
-		run("16-bit");
-		
-		setVoxelSize(width, height, depth, unit);
-	
-		selectImage("C3-Zstack" + "_Series_" + j + name + ".tif");
-		
-		getVoxelSize(width, height, depth, unit);
-		
-		selectImage("Mask_Objects_C3-Zstack" + "_Series_" + j + name + ".tif");
-		
-		run("16-bit");
-	
-		setVoxelSize(width, height, depth, unit);
-		
-		//run("DiAna_Analyse", "img1=C1-" + i +".tif img2=C2-" + i +".tif lab1=labelled-A lab2=labelled-B coloc");
-		
-		selectImage("C3-Zstack" + "_Series_" + j + name + ".tif");
-		selectImage("C2-Zstack" + "_Series_" + j + name + ".tif");
-	
-		run("DiAna_Analyse", " img1=[" + "C2-Zstack" + "_Series_" + j + name + ".tif" + "] img2=[" + "C3-Zstack" + "_Series_" + j + name + ".tif" + "] lab1=[" + "Mask_Objects_C2-Zstack" + "_Series_" + [...]
-	
-		selectWindow("ColocResults");
-	
-		saveAs("Results", folder_direction_data_graph_zstack + "/Result_DIANA" + "_Series_" + j + name + ".csv");
-	
-		selectImage("coloc");
-		
-		rename("coloc" + "_Series_" + j);
-		
-		saveAs("Tiff", folder_direction_data_graph_zstack);
-		
-		run("Close All");
-		
-		run("Collect Garbage");
-		
-		selectWindow("Result_DIANA" + "_Series_" + j + name + ".csv"); run("Close");
-		
-		
-Ext.CLIJ2_clear();
-		
-		// --- JACoP WINDOW KILLER ---
-	// This uses JavaScript to close windows that ImageJ doesn't see
-	eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('DiAna (Distance Analysis') != -1) { frames[i][...]
-	//Measurement loop for image by image
-	
 	for (i = 1; i <=size; i++) {
 		
 		//Opening the 2 images to analyze
@@ -434,8 +340,7 @@ Ext.CLIJ2_clear();
 	    
 		// Opening the plugin and launching the calculation of Pearson overlap MM cytofluo ICA and CCF
 		
-		
-		 run("JACoP ", "imga=[" + "C2_Zstack" + "_Series_" + j + name + "Image_" + i + ".tif" + "] imgb=[" + "C3_Zstack" + "_Series_" + j + name + "Image_" + i + ".tif" + "] thra=" + thresholda + "  th[...]
+		 run("JACoP ", "imga=[" + "C2_Zstack" + "_Series_" + j + name + "Image_" + i + ".tif" + "] imgb=[" + "C3_Zstack" + "_Series_" + j + name + "Image_" + i + ".tif" + "] thra=" + thresholda + "  thrb=" + thresholdb + " pearson overlap mm ccf=100 cytofluo ica");
 		 //Closing unnecessary windows
 		 
 		 selectWindow("ICA A (C2_Zstack" + "_Series_" + j + name + "Image_" + i + ".tif)");
@@ -490,9 +395,8 @@ Ext.CLIJ2_clear();
 		 
 	// --- JACoP WINDOW KILLER ---
 	// This uses JavaScript to close windows that ImageJ doesn't see
-	eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/[...]
-		 
-		 
+	eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/02/03') != -1) { frames[i].dispose(); } }"); 
+ 
 		 //Selection and storage of graph data for R
 	};
 	

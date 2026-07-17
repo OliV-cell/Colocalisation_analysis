@@ -6,9 +6,9 @@
 
 //Directory of the folder with different files to analyze
 getBoolean("Alright, brief introduction, create 3 folders, one to store the images \n" +
-"another for the data of coefficients and a last one for graph data \n"
+"another for the data of coefficients and a last one for graph data \n" + 
 "Also, depending on the number of images, this can take time, let's say a few minutes. " + 
-"Also, we calculate the threshold by cutting off the weakest 50% (at the median). It's pretty great!", "Alright", "Never mind");
+"Also, we calculate the threshold with Renyi entropy It's pretty great!", "Alright", "Never mind");
 
 //Call of directories for the folders where images, coefficient data and graph data
 //will be stored
@@ -168,7 +168,7 @@ for (i = 0; i < length; i++) {
     
 	// Opening the plugin and launching the calculation of Pearson overlap MM cytofluo ICA and CCF
 	
-	 run("JACoP ", "imga=[" + "C2-" + name + "Image_" + j + ".tif" + "] imgb=[" + "C3-" + name + "Image_" + j + ".tif" + "] thra=" + thresholda + "  thrb=" + thresholdb + " pearson overlap mm ccf=10[...]
+	 run("JACoP ", "imga=[" + "C2-" + name + "Image_" + j + ".tif" + "] imgb=[" + "C3-" + name + "Image_" + j + ".tif" + "] thra=" + thresholda + "  thrb=" + thresholdb + " pearson overlap mm ccf=100 cytofluo ica");
 
 	 run("Clear Results");
 	 
@@ -242,8 +242,7 @@ for (i = 0; i < length; i++) {
 	 
 	 // --- JACoP WINDOW KILLER --- This small code was made with Gemini-3
 // This uses JavaScript to close windows that ImageJ doesn't see
-eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/0[...]
-
+eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/02/03') != -1) { frames[i].dispose(); } }");
 	 
 };
 

@@ -1,77 +1,67 @@
-# Colocalization Macro Tutorial
+# 🔬 Fiji Colocalization Analysis Macros
 
-## Video Tutorial
+Welcome to the Fiji Colocalization Analysis Macro suite. This toolkit provides semi-automated, robust scripts for computing colocalization metrics (2D and 3D) within Fiji/ImageJ, specifically tailored for fluorescence microscopy.
 
-A comprehensive tutorial for the basic 2D colocalization macro is available here: [Colocalization Analysis Tutorial](https://youtu.be/CHfANNardjs)
+## 📺 Video Tutorial
 
-This tutorial demonstrates the default pipeline. Feel free to modify the macro to suit your specific experimental needs.
+A comprehensive step-by-step tutorial for the basic 2D colocalization macro is available on YouTube: 
 
-## Getting Started
+[![Colocalization Analysis Tutorial](https://img.youtube.com/vi/CHfANNardjs/0.jpg)](https://youtu.be/CHfANNardjs)
+
+> **Note:** The tutorial demonstrates the default pipeline. You are encouraged to modify the macro parameters to suit your specific experimental conditions and imaging modalities.
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Fiji/ImageJ with macro scripting support
-- Image files in TIFF or compatible format
-- Two or more fluorescence channels for colocalization analysis
+- **Software:** Fiji/ImageJ with macro scripting support enabled.
+- **Data Format:** Image files in `.tif` or any bio-formats compatible format.
+- **Channels:** At least two fluorescence channels to perform colocalization analysis.
 
 ### Running the Macro
-
-1. Open Fiji/ImageJ
-2. Load your image file
-3. Go to `Macros` → `Edit Macros` (or open the macro file directly)
-4. Run the macro using `Macros` → `Run Macro`
+1. Launch **Fiji/ImageJ**.
+2. Load your image file.
+3. Navigate to `Plugins` → `Macros` → `Edit...` and open your desired `.ijm` macro file.
+4. Execute the script by clicking `Run` (or `Macros` → `Run Macro`).
 
 ### Batch Processing (Optional)
-
-The macro can be run in batch mode for improved performance:
-
+For high-throughput analysis, the macro can be executed in batch mode to significantly improve performance. 
+Locate the following line in the script:
+```java
+// setBatchMode(true);
 ```
+Uncomment it (remove the `//`) to disable screen updates during processing:
+```java
 setBatchMode(true);
 ```
+*This is disabled by default to allow visual feedback during the tutorial.*
 
-This line is commented out by default to allow visualization during the tutorial, but you can uncomment it to disable screen updates and speed up processing when running multiple images.
+## 🧬 Macro Versions
 
-## Macro Versions
+### 2D Colocalization Macro (`Macro_colocalisation.ijm`)
+Designed for standard two-dimensional images. Calculates the following colocalization metrics:
+- **Pearson's Correlation Coefficient (PCC)**
+- **Manders' Overlap Coefficients (M1 & M2)**
+- **Intensity Correlation Quotient (ICQ)**
 
-### 2D Colocalization Macro
+### 3D Colocalization Macro (Z-Stack)
+The 3D macros (`Macro_analyse_colocalization_forZstack.ijm` & `Macro_analyse_colocalisation_forZstack_only.ijm`) operate on volumetric (Z-stack) data. They extend the 2D logic across additional Z-planes.
 
-The basic 2D macro processes two-dimensional images and calculates colocalization metrics including:
-- Pearson correlation coefficient
-- Manders' coefficients
-- Intensity correlation quotient
+## 📁 Output & File Structure
 
-**Output files required:**
-- `Coloc_score/` – Numerical colocalization scores
-- `Coloc_graph/` – Visualization graphs
-- `Tiff_bin/` – Binary thresholded images
+The macros will generate output across three main directories. 
+> **Important:** For 3D analysis, you will need separate directories for 2D (MIP or single slice) and 3D results for each category below.
 
-### 3D Colocalization Macro
+- 📊 **`Coloc_score/`**: Quantitative metrics stored as text/spreadsheet files.
+- 📈 **`Coloc_graph/`**: Graphical representations of colocalization patterns (scatter plots, etc.).
+- 🖼️ **`Tiff_bin/`**: Binary thresholded `.tif` images used during the calculation.
 
-The 3D macro operates on the same logic as the 2D version but processes volumetric (Z-stack) data. The key difference is the handling of additional Z-plane data throughout the analysis pipeline.
+## ⚙️ Customization
 
-**Additional requirements for 3D analysis:**
-- Three additional files per category to store Z-stack image data:
-  - `Coloc_score/` – Numerical colocalization scores for the stack
-  - `Coloc_graph/` – Visualization graphs for the stack
-  - `Tiff_bin/` – Binary thresholded images for each Z-plane
+These macros are open-source and fully customizable:
+- **Thresholds:** Adjust thresholding algorithms (e.g., Renyi's entropy) to match your specific dyes and signal-to-noise ratios.
+- **Naming Conventions:** Modify output file names for better integration into your data management pipelines.
+- **Additional Parameters:** Include more morphological or intensity-based measurements as needed.
 
-**File structure:** You will need 2 directories (one for 2D results and one for 3D results) for each analysis category (Coloc_score, Coloc_graph, Tiff_bin).
-
-## Output
-
-The macros generate:
-- **Coloc_score**: Quantitative colocalization metrics stored as text files or spreadsheets
-- **Coloc_graph**: Graphical representations of colocalization patterns
-- **Tiff_bin**: Tiff image data
-
-## Customization
-
-Both 2D and 3D macros are fully customizable:
-- Adjust threshold values for your specific dyes and imaging conditions
-- Modify output file naming conventions
-- Include additional image analysis parameters as needed
-
-## Notes
-
-- The macros are designed to work with standard fluorescence microscopy data
-- Ensure consistent image preprocessing (background subtraction, alignment, etc.) before running the analysis
-- Results depend on proper channel registration and imaging parameters
+## ⚠️ Important Notes
+- Ensure **consistent image preprocessing** (e.g., background subtraction, channel alignment/registration, deconvolution) before running the analysis.
+- The results heavily depend on **proper channel registration** and appropriate imaging parameters during acquisition.

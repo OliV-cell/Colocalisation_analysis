@@ -1,96 +1,88 @@
 ###########################################
-#Script analyse résultats colocalisation
-#CTAC+CTAT sonde sens (brin antisens)
+# Colocalization results analysis script
+# CTAC+CTAT sense probe (antisense strand)
 ##########################################
 
-#test satistique divers
+# various statistical tests
 
 
 library(car)
-library(multcompView)
 library(dplyr)
-library(agricolae)
 library(coin)
-library(FSA)
-library(multcomp)
 library(rcompanion)
 library(psych)
 library(nlstools)
-library(lmtest)
 library(tidyr)
-library(SuppDists)
 
-#regression
+# regression
 library(DHARMa)
 library(splines)
 library(gamm4)
 library(mgcv)
 library(gvlma)
-library(stargazer)
 library(performance)
 library(see)
-library(glmmTMB)
 library(MASS)
 library(robustbase)
 
-#representation graphique
-library(ggeffects)
+# graphical representation
 library(ggplot2)
 library(ggpubr)
+library(ggeffects)
 
-#citation 
+# citation 
 library(grateful)
 
 #########################################################################
-#ouverture des fichier contenant les indices, est sous forme txt dans csv
+# opening of files containing the indices, is in txt format inside csv
 
-#Vecteur des nom des futur fichier utiliser
+# Vector of future file names to be used
 
-nom_des_fichier <- vector()
-nom_des_fichier_rep1 <- vector()
+file_names <- vector()
+file_names_rep1 <- vector()
 
 for ( i in (3:10)){
   
-  nom_des_fichier[[i-2]] <- paste0("score_coloc_stade",i)
-  nom_des_fichier_rep1[[i-2]] <- paste0("score_coloc_stade",i,"_rep1")
+  file_names[[i-2]] <- paste0("score_coloc_stage",i)
+  file_names_rep1[[i-2]] <- paste0("score_coloc_stage",i,"_rep1")
   
 }
 
-#ouverture de la répétition 0
+# opening of repetition 0
 
 for ( i in c(3:10)) {
   
   ID <- read.csv(paste0("Coef_coloc_Dvir48_CTAC_CTAT_sensboth_stade",i,".csv"),
                               sep = ",", dec = ".", header =TRUE)
-  assign(nom_des_fichier[i-2],ID)
+  assign(file_names[i-2],ID)
   
 }
 
-#ouverture de la répétition 1
+# opening of repetition 1
 
 for ( i in c(3:10)) {
   
   ID <- read.csv(paste0("Coef_coloc_Dvir48_CTAC_CTAT_sensboth_stade",i,"_rep1.csv"),
                                             sep = ",", dec = ".", header =TRUE)
-  assign(nom_des_fichier_rep1[i-2],ID)
+  assign(file_names_rep1[i-2],ID)
   
 }
 
-#en suivant la même logique, on peut faire ensuite une boulce j à l'intérieure de la boucle i pour i stade
-#et J répétiton
+# following the same logic, we can then make a loop j inside the loop i for i stage
+# and J repetition
 
 ###############################################################################
-#Nettotage des donnée afin de ne récupérer que les données importante au analyse
+# Data cleaning to recover only the data important to the analysis
 
-#Fonction de nettoyage
+# Cleaning function
 
-Traitement_data_coloc <- function(tableau_data_souce){
+Process_coloc_data <- function(source_data_table){
   
-  #Tableau de donné ou tout seras entreposer
+  # Data table where everything will be stored
   
-  indice_coloc <- data.frame(Coef_pearson = rep(0,1),
+  coloc_index <- data.frame(Coef_pearson = rep(0,1),
                              
-                             Coeaf_overlap = rep(0,1),
+                             Coef_overlap = rep(0,1),
                              
                              k1  = rep(0,1),
                              
@@ -100,66 +92,66 @@ Traitement_data_coloc <- function(tableau_data_souce){
                              
                              M2 = rep(0,1),
                              
-                             a_cytofluogram  = rep(0,1),
+                             a_cytofluorogram  = rep(0,1),
                              
-                             b_cytofluogram = rep(0,1), 
+                             b_cytofluorogram = rep(0,1), 
                              
                              ICQ = rep(0,1),
                              
                              stringsAsFactors = FALSE)
   
-  #indice d'ajout de ligne pour chaque occurence dans le fichier txt
+  # index to add line for each occurrence in the txt file
   
   new_row <- rep(0, 9)
   
-  #indice pour la boucle initial
+  # index for the initial loop
   
   n <- 1
   
   
-  for ( i in c(1:nrow(tableau_data_souce))){
+  for ( i in c(1:nrow(source_data_table))){
     
-    if (grepl("Pearson's Coefficient:", tableau_data_souce[i,1],fixed = TRUE)){
+    if (grepl("Pearson's Coefficient:", source_data_table[i,1],fixed = TRUE)){
       
-      new_row[1] <- tableau_data_souce[i+1,1]
+      new_row[1] <- source_data_table[i+1,1]
       
     }
     
-    if (grepl("Overlap Coefficient:", tableau_data_souce[i,1],fixed = TRUE)){
+    if (grepl("Overlap Coefficient:", source_data_table[i,1],fixed = TRUE)){
       
-      new_row[2] <- tableau_data_souce[i+1,1]
-      
-    }
-    
-    if (grepl("r^2=k1xk2:", tableau_data_souce[i,1],fixed = TRUE)){
-      
-      new_row[3] <- tableau_data_souce[i+1,1]
-      
-      new_row[4] <- tableau_data_souce[i+2,1]
+      new_row[2] <- source_data_table[i+1,1]
       
     }
     
-    if (grepl("Manders' Coefficients (using threshold", tableau_data_souce[i,1], fixed = TRUE)){
+    if (grepl("r^2=k1xk2:", source_data_table[i,1],fixed = TRUE)){
       
-      new_row[5] <- tableau_data_souce[i+1,1]
+      new_row[3] <- source_data_table[i+1,1]
       
-      new_row[6] <- tableau_data_souce[i+2,1]
-      
-    }
-    
-    if (grepl("Cytofluorogram's parameters:", tableau_data_souce[i,1],fixed = TRUE)){
-      
-      new_row[7] <- tableau_data_souce[i+1,1]
-      
-      new_row[8] <- tableau_data_souce[i+2,1]
+      new_row[4] <- source_data_table[i+2,1]
       
     }
     
-    if (grepl("ICQ: ",tableau_data_souce[i,1],fixed = TRUE)){
+    if (grepl("Manders' Coefficients (using threshold", source_data_table[i,1], fixed = TRUE)){
       
-      new_row[9] <- tableau_data_souce[i,1]
+      new_row[5] <- source_data_table[i+1,1]
       
-      indice_coloc[n, ] <- new_row
+      new_row[6] <- source_data_table[i+2,1]
+      
+    }
+    
+    if (grepl("Cytofluorogram's parameters:", source_data_table[i,1],fixed = TRUE)){
+      
+      new_row[7] <- source_data_table[i+1,1]
+      
+      new_row[8] <- source_data_table[i+2,1]
+      
+    }
+    
+    if (grepl("ICQ: ",source_data_table[i,1],fixed = TRUE)){
+      
+      new_row[9] <- source_data_table[i,1]
+      
+      coloc_index[n, ] <- new_row
       
       n <- n + 1
       new_row <- rep(0, 9)
@@ -168,77 +160,77 @@ Traitement_data_coloc <- function(tableau_data_souce){
     
   }
   
-  #Nettoyage de tout les caractère non numérique et transfromation en caratère numérique
+  # Clean all non-numeric characters and transform to numeric
   
-  indice_coloc[] <- lapply(indice_coloc, function(x) {
+  coloc_index[] <- lapply(coloc_index, function(x) {
     as.numeric(sub(".*[:=]\\s*([-0-9eE\\.]+).*", "\\1", x))
   })
   
-  return(indice_coloc)
+  return(coloc_index)
   
 }
 
 ###################################################################
-#Nettoyage des données
-indice_colocalisation_stade3 <- Traitement_data_coloc(score_coloc_stade3)
-indice_colocalisation_stade4 <- Traitement_data_coloc(score_coloc_stade4)
-indice_colocalisation_stade5 <- Traitement_data_coloc(score_coloc_stade5)
-indice_colocalisation_stade6 <- Traitement_data_coloc(score_coloc_stade6)
-indice_colocalisation_stade7 <- Traitement_data_coloc(score_coloc_stade7)
-indice_colocalisation_stade8 <- Traitement_data_coloc(score_coloc_stade8)
-indice_colocalisation_stade9 <- Traitement_data_coloc(score_coloc_stade9)
-indice_colocalisation_stade10 <- Traitement_data_coloc(score_coloc_stade10)
+# Data cleaning
+colocalization_index_stage3 <- Process_coloc_data(score_coloc_stage3)
+colocalization_index_stage4 <- Process_coloc_data(score_coloc_stage4)
+colocalization_index_stage5 <- Process_coloc_data(score_coloc_stage5)
+colocalization_index_stage6 <- Process_coloc_data(score_coloc_stage6)
+colocalization_index_stage7 <- Process_coloc_data(score_coloc_stage7)
+colocalization_index_stage8 <- Process_coloc_data(score_coloc_stage8)
+colocalization_index_stage9 <- Process_coloc_data(score_coloc_stage9)
+colocalization_index_stage10 <- Process_coloc_data(score_coloc_stage10)
 
-indice_colocalisation_stade3_rep1 <- Traitement_data_coloc(score_coloc_stade3_rep1)
-indice_colocalisation_stade4_rep1 <- Traitement_data_coloc(score_coloc_stade4_rep1)
-indice_colocalisation_stade5_rep1 <- Traitement_data_coloc(score_coloc_stade5_rep1)
-indice_colocalisation_stade6_rep1 <- Traitement_data_coloc(score_coloc_stade6_rep1)
-indice_colocalisation_stade7_rep1 <- Traitement_data_coloc(score_coloc_stade7_rep1)
-indice_colocalisation_stade8_rep1 <- Traitement_data_coloc(score_coloc_stade8_rep1)
-indice_colocalisation_stade9_rep1 <- Traitement_data_coloc(score_coloc_stade9_rep1)
-indice_colocalisation_stade10_rep1 <- Traitement_data_coloc(score_coloc_stade10_rep1)
+colocalization_index_stage3_rep1 <- Process_coloc_data(score_coloc_stage3_rep1)
+colocalization_index_stage4_rep1 <- Process_coloc_data(score_coloc_stage4_rep1)
+colocalization_index_stage5_rep1 <- Process_coloc_data(score_coloc_stage5_rep1)
+colocalization_index_stage6_rep1 <- Process_coloc_data(score_coloc_stage6_rep1)
+colocalization_index_stage7_rep1 <- Process_coloc_data(score_coloc_stage7_rep1)
+colocalization_index_stage8_rep1 <- Process_coloc_data(score_coloc_stage8_rep1)
+colocalization_index_stage9_rep1 <- Process_coloc_data(score_coloc_stage9_rep1)
+colocalization_index_stage10_rep1 <- Process_coloc_data(score_coloc_stage10_rep1)
 
 ####################################################################################
 
-#Fusion des row de tout les essaies
+# Merging rows of all trials
 
-indice_colocalisation_stade3_totale <- rbind(indice_colocalisation_stade3_rep1,
-                                      indice_colocalisation_stade3)
+colocalization_index_stage3_total <- rbind(colocalization_index_stage3_rep1,
+                                      colocalization_index_stage3)
 
-indice_colocalisation_stade4_totale <- rbind(indice_colocalisation_stade4_rep1,
-                                      indice_colocalisation_stade4)
+colocalization_index_stage4_total <- rbind(colocalization_index_stage4_rep1,
+                                      colocalization_index_stage4)
 
-indice_colocalisation_stade5_totale <- rbind(indice_colocalisation_stade5_rep1,
-                                      indice_colocalisation_stade5)
+colocalization_index_stage5_total <- rbind(colocalization_index_stage5_rep1,
+                                      colocalization_index_stage5)
 
-indice_colocalisation_stade6_totale <- rbind(indice_colocalisation_stade6_rep1,
-                                      indice_colocalisation_stade6)
+colocalization_index_stage6_total <- rbind(colocalization_index_stage6_rep1,
+                                      colocalization_index_stage6)
 
-indice_colocalisation_stade7_totale <- rbind(indice_colocalisation_stade7_rep1,
-                                      indice_colocalisation_stade7)
+colocalization_index_stage7_total <- rbind(colocalization_index_stage7_rep1,
+                                      colocalization_index_stage7)
 
-indice_colocalisation_stade8_totale <- rbind(indice_colocalisation_stade8_rep1,
-                                      indice_colocalisation_stade8)
+colocalization_index_stage8_total <- rbind(colocalization_index_stage8_rep1,
+                                      colocalization_index_stage8)
 
-indice_colocalisation_stade9_totale <- rbind(indice_colocalisation_stade9_rep1,
-                                      indice_colocalisation_stade9)
+colocalization_index_stage9_total <- rbind(colocalization_index_stage9_rep1,
+                                      colocalization_index_stage9)
 
-indice_colocalisation_stade10_totale <- rbind(indice_colocalisation_stade10_rep1,
-                                       indice_colocalisation_stade10)
+colocalization_index_stage10_total <- rbind(colocalization_index_stage10_rep1,
+                                       colocalization_index_stage10)
 
 ##################################################################################
 
-#Calcule des moyennes de tout les scores
+# Calculate means of all scores
 
-#Fonction de calcule des moyenne pour chaque score de chaque stade
+# Function to calculate means for each score of each stage
 
-Calcule_moyene <- function(tableau_data_souce){
+Calculate_mean <- function(source_data_table){
   
-  #Tableau de donné ou tout seras entreposer
+  # Data table where everything will be stored
   
-  indice_coloc_moyenne <- data.frame(Coef_pearson = rep(0,1),
+  mean_coloc_index <- data.frame(Coef_pearson = rep(0,1),
                                      
-                                     Coeaf_overlap = rep(0,1),
+                                     Coef_overlap = rep(0,1),
                                      
                                      k1  = rep(0,1),
                                      
@@ -248,123 +240,123 @@ Calcule_moyene <- function(tableau_data_souce){
                                      
                                      M2 = rep(0,1),
                                      
-                                     a_cytofluogram  = rep(0,1),
+                                     a_cytofluorogram  = rep(0,1),
                                      
-                                     b_cytofluogram = rep(0,1), 
+                                     b_cytofluorogram = rep(0,1), 
                                      
                                      ICQ = rep(0,1))
   
-  for (i in c(1:ncol(tableau_data_souce))) {
+  for (i in c(1:ncol(source_data_table))) {
     
-    indice_coloc_moyenne[,i] <- mean(tableau_data_souce[,i])
+    mean_coloc_index[,i] <- mean(source_data_table[,i])
     
     
   }
   
-  return(indice_coloc_moyenne)
+  return(mean_coloc_index)
 }  
 
-moyenne_coloc_coef_stade3 <- Calcule_moyene(indice_colocalisation_stade3_totale)
-moyenne_coloc_coef_stade4 <- Calcule_moyene(indice_colocalisation_stade4_totale)
-moyenne_coloc_coef_stade5 <- Calcule_moyene(indice_colocalisation_stade5_totale)
-moyenne_coloc_coef_stade6 <- Calcule_moyene(indice_colocalisation_stade6_totale)
-moyenne_coloc_coef_stade7 <- Calcule_moyene(indice_colocalisation_stade7_totale)
-moyenne_coloc_coef_stade8 <- Calcule_moyene(indice_colocalisation_stade8_totale)
-moyenne_coloc_coef_stade9 <- Calcule_moyene(indice_colocalisation_stade9_totale)
-moyenne_coloc_coef_stade10 <- Calcule_moyene(indice_colocalisation_stade10_totale)
+mean_coloc_coef_stage3 <- Calculate_mean(colocalization_index_stage3_total)
+mean_coloc_coef_stage4 <- Calculate_mean(colocalization_index_stage4_total)
+mean_coloc_coef_stage5 <- Calculate_mean(colocalization_index_stage5_total)
+mean_coloc_coef_stage6 <- Calculate_mean(colocalization_index_stage6_total)
+mean_coloc_coef_stage7 <- Calculate_mean(colocalization_index_stage7_total)
+mean_coloc_coef_stage8 <- Calculate_mean(colocalization_index_stage8_total)
+mean_coloc_coef_stage9 <- Calculate_mean(colocalization_index_stage9_total)
+mean_coloc_coef_stage10 <- Calculate_mean(colocalization_index_stage10_total)
 
 
-moyenne_coloc_coef <- rbind(moyenne_coloc_coef_stade3,moyenne_coloc_coef_stade4,moyenne_coloc_coef_stade5,
-                            moyenne_coloc_coef_stade6, moyenne_coloc_coef_stade7, moyenne_coloc_coef_stade8,
-                            moyenne_coloc_coef_stade9, moyenne_coloc_coef_stade10)
+mean_coloc_coef <- rbind(mean_coloc_coef_stage3,mean_coloc_coef_stage4,mean_coloc_coef_stage5,
+                            mean_coloc_coef_stage6, mean_coloc_coef_stage7, mean_coloc_coef_stage8,
+                            mean_coloc_coef_stage9, mean_coloc_coef_stage10)
 
-rownames(moyenne_coloc_coef) <- c(
-  "Stade3",
-  "Stade4",
-  "Stade5",
-  "Stade6",
-  "Stade7",
-  "Stade8",
-  "Stade9",
-  "Stade10"
+rownames(mean_coloc_coef) <- c(
+  "Stage3",
+  "Stage4",
+  "Stage5",
+  "Stage6",
+  "Stage7",
+  "Stage8",
+  "Stage9",
+  "Stage10"
 )
 
-Stade <- c(
-  "Stade3",
-  "Stade4",
-  "Stade5",
-  "Stade6",
-  "Stade7",
-  "Stade8",
-  "Stade9",
-  "Stade10")
+Stage <- c(
+  "Stage3",
+  "Stage4",
+  "Stage5",
+  "Stage6",
+  "Stage7",
+  "Stage8",
+  "Stage9",
+  "Stage10")
 
-moyenne_coloc_coef <- cbind(moyenne_coloc_coef,Stade)
+mean_coloc_coef <- cbind(mean_coloc_coef,Stage)
 
 
 ######################################
-#data long des score combinés ensemble
+# long data of combined scores together
 
-indice_colocalisation_stade3_totale$stade <- rep(3,length(indice_colocalisation_stade3_totale[,1]))
+colocalization_index_stage3_total$stage <- rep(3,length(colocalization_index_stage3_total[,1]))
 
-indice_colocalisation_stade4_totale$stade <- rep(4,length(indice_colocalisation_stade4_totale[,1]))
+colocalization_index_stage4_total$stage <- rep(4,length(colocalization_index_stage4_total[,1]))
 
-indice_colocalisation_stade5_totale$stade <- rep(5,length(indice_colocalisation_stade5_totale[,1]))
+colocalization_index_stage5_total$stage <- rep(5,length(colocalization_index_stage5_total[,1]))
 
-indice_colocalisation_stade6_totale$stade <- rep(6,length(indice_colocalisation_stade6_totale[,1]))
+colocalization_index_stage6_total$stage <- rep(6,length(colocalization_index_stage6_total[,1]))
 
-indice_colocalisation_stade7_totale$stade <- rep(7,length(indice_colocalisation_stade7_totale[,1]))
+colocalization_index_stage7_total$stage <- rep(7,length(colocalization_index_stage7_total[,1]))
 
-indice_colocalisation_stade8_totale$stade <- rep(8,length(indice_colocalisation_stade8_totale[,1]))
+colocalization_index_stage8_total$stage <- rep(8,length(colocalization_index_stage8_total[,1]))
 
-indice_colocalisation_stade9_totale$stade <- rep(9,length(indice_colocalisation_stade9_totale[,1]))
+colocalization_index_stage9_total$stage <- rep(9,length(colocalization_index_stage9_total[,1]))
 
-indice_colocalisation_stade10_totale$stade <- rep(10,length(indice_colocalisation_stade10_totale[,1]))
+colocalization_index_stage10_total$stage <- rep(10,length(colocalization_index_stage10_total[,1]))
 
-Indice_colocalisation_tout_stade <- rbind(indice_colocalisation_stade3_totale,
-                                          indice_colocalisation_stade4_totale,
-                                          indice_colocalisation_stade5_totale,
-                                          indice_colocalisation_stade6_totale,
-                                          indice_colocalisation_stade7_totale,
-                                          indice_colocalisation_stade8_totale,
-                                          indice_colocalisation_stade9_totale,
-                                          indice_colocalisation_stade10_totale)
+Colocalization_index_all_stages <- rbind(colocalization_index_stage3_total,
+                                          colocalization_index_stage4_total,
+                                          colocalization_index_stage5_total,
+                                          colocalization_index_stage6_total,
+                                          colocalization_index_stage7_total,
+                                          colocalization_index_stage8_total,
+                                          colocalization_index_stage9_total,
+                                          colocalization_index_stage10_total)
 
-Indice_colocalisation_tout_stade_lon <- Indice_colocalisation_tout_stade[,c(1,2,5,6,9,10)] %>%
+Colocalization_index_all_stages_lon <- Colocalization_index_all_stages[,c(1,2,5,6,9,10)] %>%
   pivot_longer(
-    cols = colnames(Indice_colocalisation_tout_stade[,c(1,2,5,6,9)]), 
-    names_to = "ID_score",             
-    values_to = "valeurs"
+    cols = colnames(Colocalization_index_all_stages[,c(1,2,5,6,9)]), 
+    names_to = "score_ID",             
+    values_to = "values"
   )
 
 ####################################################################################
-#Représentation graphique de l'évolution des scores en fonction des stades
-#Ainsi que leurs variances interstade
+# Graphical representation of the evolution of scores according to stages
+# As well as their inter-stage variances
 ####################################################################################
 
 
 #####################################
-#Test modele LM
+# Test LM model
 ###################################
 
-#confection de model préléminaire pour tester les conditions d'application
+# preliminary model creation to test application conditions
 
-model_pearson <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ bs(stade,7))
+model_pearson <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ bs(stage,7))
 
-#on test les conditions
+# test conditions
 check_model(model_pearson)
 check_autocorrelation(model_pearson)
 check_heteroscedasticity(model_pearson)
 
 shapiro.test(model_pearson$residuals)
 mean(model_pearson$residuals)
-cor.test(Indice_colocalisation_tout_stade$stade, model_pearson$residuals)
+cor.test(Colocalization_index_all_stages$stage, model_pearson$residuals)
 model_performance(model_pearson)
 
-#vérification linéarité 
+# linearity verification 
 
-newdat <- Indice_colocalisation_tout_stade_lon %>% 
-  filter(ID_score == "Coef_pearson")
+newdat <- Colocalization_index_all_stages_lon %>% 
+  filter(score_ID == "Coef_pearson")
 newdat$fit <- fitted(model_pearson)
 newdat$res <- resid(model_pearson)
 newdat$weights <- model_pearson$w
@@ -372,30 +364,30 @@ newdat$weights <- model_pearson$w
 plot_1 <- ggplot(newdat, aes(fit, res))+
   geom_point()+
   geom_smooth()+
-  geom_hline(yintercept=0, linetype='dashed', col='red4', size=1.2)+ ggtitle('linéarité pearson sens')
+  geom_hline(yintercept=0, linetype='dashed', col='red4', size=1.2)+ ggtitle('pearson linearity sense')
 
-#sur les valeurs x exacte
+# on exact x values
 
-plot_2 <- ggplot(newdat, aes(x = Indice_colocalisation_tout_stade$stade, y = res))+
+plot_2 <- ggplot(newdat, aes(x = Colocalization_index_all_stages$stage, y = res))+
   geom_point()+
   geom_smooth()+
-  geom_hline(yintercept=0, linetype='dashed', col='red4', size=1.2)+ ggtitle('linéarité pearson sens sur stade')
+  geom_hline(yintercept=0, linetype='dashed', col='red4', size=1.2)+ ggtitle('pearson linearity sense on stage')
 
 ggarrange(plot_1,plot_2)
 
 ######################
 
-for (i in c(1:length(Indice_colocalisation_tout_stade$Coeaf_overlap))) {
+for (i in c(1:length(Colocalization_index_all_stages$Coef_overlap))) {
   
-  if (Indice_colocalisation_tout_stade$Coeaf_overlap[i] == 0){
+  if (Colocalization_index_all_stages$Coef_overlap[i] == 0){
     
-    Indice_colocalisation_tout_stade$Coeaf_overlap[i] <- NA
+    Colocalization_index_all_stages$Coef_overlap[i] <- NA
     
   }
   
 }
 
-model_Overlap <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ bs(stade,5))
+model_Overlap <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ bs(stage,5))
 
 shapiro.test(model_Overlap$residuals)
 
@@ -403,11 +395,11 @@ check_heteroscedasticity(model_Overlap)
 
 qqPlot(resid(model_Overlap),
        main = "Overlap")
-#on test les conditions
+# test conditions
 
-newdat <- Indice_colocalisation_tout_stade_lon %>% 
-  filter(ID_score == "Coeaf_overlap",
-         valeurs != 0)
+newdat <- Colocalization_index_all_stages_lon %>% 
+  filter(score_ID == "Coef_overlap",
+         values != 0)
 newdat$fit <- fitted(model_Overlap)
 newdat$res <- resid(model_Overlap)
 newdat$weights <- model_Overlap$w
@@ -421,24 +413,24 @@ ggplot(newdat, aes(x = fit, y = res)) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
     title = 'Overlap',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
 
-plot_2 <- ggplot(newdat, aes(x = stade, y = res)) +
+plot_2 <- ggplot(newdat, aes(x = stage, y = res)) +
   geom_point(aes(color = weights, alpha = weights),
              size = 4) +
   scale_color_gradient(low = "cyan", high = "blue") +
   geom_smooth(color = "black", se = TRUE, size = 0.8) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
-    title = 'Overlap sur stade',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    title = 'Overlap on stage',
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
@@ -447,16 +439,16 @@ ggarrange(plot_1,plot_2)
 mean(model_Overlap$residuals)
 dwtest(model_Overlap)
 lmtest::bptest(model_Overlap)
-cor.test(newdat$stade, model_Overlap$residuals)
+cor.test(newdat$stage, model_Overlap$residuals)
 
 
-#on replace les 0 
+# replace the 0s 
 
-for (i in c(1:length(Indice_colocalisation_tout_stade$Coeaf_overlap))) {
+for (i in c(1:length(Colocalization_index_all_stages$Coef_overlap))) {
   
-  if (is.na(Indice_colocalisation_tout_stade$Coeaf_overlap[i])){
+  if (is.na(Colocalization_index_all_stages$Coef_overlap[i])){
     
-    Indice_colocalisation_tout_stade$Coeaf_overlap[i] <- 0
+    Colocalization_index_all_stages$Coef_overlap[i] <- 0
     
   }
   
@@ -464,7 +456,7 @@ for (i in c(1:length(Indice_colocalisation_tout_stade$Coeaf_overlap))) {
 
 
 ######################
-model_ICQ <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ bs(stade,4))
+model_ICQ <- rlm(data = Colocalization_index_all_stages, ICQ ~ bs(stage,4))
 
 shapiro.test(model_ICQ$residuals)
 
@@ -474,13 +466,13 @@ mean(model_ICQ$residuals)
 
 dwtest(model_ICQ)
 
-cor.test(Indice_colocalisation_tout_stade$stade, model_ICQ$residuals)
+cor.test(Colocalization_index_all_stages$stage, model_ICQ$residuals)
 
 qqPlot(resid(model_ICQ),
        main = "ICQ")
 
-newdat <- Indice_colocalisation_tout_stade_lon %>% 
-  filter(ID_score == "ICQ")
+newdat <- Colocalization_index_all_stages_lon %>% 
+  filter(score_ID == "ICQ")
 newdat$fit <- fitted(model_ICQ)
 newdat$res <- resid(model_ICQ)
 newdat$weights <- model_ICQ$w
@@ -494,42 +486,42 @@ plot_1 <- ggplot(newdat, aes(x = fit, y = res)) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
     title = 'ICQ',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
-plot_2 <- ggplot(newdat, aes(x = Indice_colocalisation_tout_stade$stade, y = res)) +
+plot_2 <- ggplot(newdat, aes(x = Colocalization_index_all_stages$stage, y = res)) +
   geom_point(aes(color = weights, alpha = weights),
              size = 4) +
   scale_color_gradient(low = "cyan", high = "blue") +
   geom_smooth(color = "black", se = TRUE, size = 0.8) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
-    title = 'ICQ sur stade',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    title = 'ICQ on stage',
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
 ggarrange(plot_1,plot_2)
 
 ######################
-model_M1 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,5))
+model_M1 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,5))
 
-#on test les conditions
+# test conditions
 shapiro.test(model_M1$residuals)
 mean(model_M1$residuals)
 check_heteroscedasticity(model_M1)
-cor.test(Indice_colocalisation_tout_stade$stade, model_M1$residuals)
+cor.test(Colocalization_index_all_stages$stage, model_M1$residuals)
 
 qqPlot(resid(model_M1),
        main = "M1")
 
-newdat <- Indice_colocalisation_tout_stade_lon %>% 
-  filter(ID_score == "M1")
+newdat <- Colocalization_index_all_stages_lon %>% 
+  filter(score_ID == "M1")
 newdat$fit <- fitted(model_M1)
 newdat$res <- resid(model_M1)
 newdat$weights <- model_M1$w
@@ -543,43 +535,43 @@ plot_1 <- ggplot(newdat, aes(x = fit, y = res)) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
     title = 'M1',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
-plot_2 <- ggplot(newdat, aes(x = Indice_colocalisation_tout_stade$stade, y = res)) +
+plot_2 <- ggplot(newdat, aes(x = Colocalization_index_all_stages$stage, y = res)) +
   geom_point(aes(color = weights, alpha = weights),
              size = 4) +
   scale_color_gradient(low = "cyan", high = "blue") +
   geom_smooth(color = "black", se = TRUE, size = 0.8) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
-    title = 'M1 sur stade',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    title = 'M1 on stage',
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
 ggarrange(plot_1,plot_2)
 
 ######################
-model_M2 <- rlm(data = Indice_colocalisation_tout_stade,M2 ~ bs(stade,6))
+model_M2 <- rlm(data = Colocalization_index_all_stages,M2 ~ bs(stage,6))
 
-#on test les conditions
+# test conditions
 mean(model_M2$residuals)
 shapiro.test(model_M2$residuals)
 check_heteroscedasticity(model_M2)
 dwtest(model_M2)
-cor.test(Indice_colocalisation_tout_stade$stade, model_M2$residuals)
+cor.test(Colocalization_index_all_stages$stage, model_M2$residuals)
 
 qqPlot(resid(model_M2),
        main = "M2")
 
-newdat <- Indice_colocalisation_tout_stade_lon %>% 
-  filter(ID_score == "M2")
+newdat <- Colocalization_index_all_stages_lon %>% 
+  filter(score_ID == "M2")
 newdat$fit <- fitted(model_M2)
 newdat$res <- resid(model_M2)
 newdat$weights <- model_M2$w
@@ -593,37 +585,37 @@ plot_1 <- ggplot(newdat, aes(x = fit, y = res)) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
     title = 'M2',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
-plot_2 <- ggplot(newdat, aes(x = Indice_colocalisation_tout_stade$stade, y = res)) +
+plot_2 <- ggplot(newdat, aes(x = Colocalization_index_all_stages$stage, y = res)) +
   geom_point(aes(color = weights, alpha = weights),
              size = 4) +
   scale_color_gradient(low = "cyan", high = "blue") +
   geom_smooth(color = "black", se = TRUE, size = 0.8) +
   geom_hline(yintercept = 0, linetype = 'dashed', col = 'red4', size = 1) +
   labs(
-    title = 'M2 sur stade',
-    x = 'Valeurs ajustées (Fitted)',
-    y = 'Résidus',
-    color = 'Poids'
+    title = 'M2 on stage',
+    x = 'Fitted values',
+    y = 'Residuals',
+    color = 'Weights'
   ) +
   theme_minimal()
 
 ggarrange(plot_1,plot_2)
 
-#on test les conditions
+# test conditions
 mean(model_M2$residuals)
 shapiro.test(model_M2$residuals)
 dwtest(model_M2)
 lmtest::bptest(model_M2)
-cor.test(Indice_colocalisation_tout_stade$stade, model_M2$residuals)
+cor.test(Colocalization_index_all_stages$stage, model_M2$residuals)
 
 
-#mean de tout le monde
+# mean of everyone
 mean(model_pearson$residuals)
 mean(model_Overlap$residuals)
 mean(model_ICQ$residuals)
@@ -632,7 +624,7 @@ mean(model_M2$residuals)
 
 
 ####################################
-#Prédiction de chaque model
+# Prediction of each model
 ####################################
 
 summary(model_pearson)
@@ -641,7 +633,7 @@ summary(model_ICQ)
 summary(model_M1)
 summary(model_M2)
 
-#calcule des R2 et speudo R2
+# calculation of R2 and pseudo R2
 
 data_r2 <- data.frame("Pearson" = c(0,0),
                       "Overlap" = c(0,0),
@@ -651,16 +643,16 @@ data_r2 <- data.frame("Pearson" = c(0,0),
                       row.names = c("R^2","P.value"))
 
 data_r2[1,1] <- summary(model_pearson)$r.squared
-data_r2[1,2] <- (cor(model_Overlap$model$Coeaf_overlap, predict(model_Overlap)))^2
+data_r2[1,2] <- (cor(model_Overlap$model$Coef_overlap, predict(model_Overlap)))^2
 data_r2[1,3] <- (cor(model_ICQ$model$ICQ, predict(model_ICQ)))^2
 data_r2[1,4] <- (cor(model_M1$model$M1, predict(model_M1)))^2
 data_r2[1,5] <- (cor(model_M2$model$M2, predict(model_M2)))^2
 
-pred_pearson <- predict_response(model_pearson, terms = "stade [3:10]")
-pred_overlap <- predict_response(model_Overlap, terms = "stade [3:10]")
-pred_ICQ <- predict_response(model_ICQ, terms = "stade [3:10]")
-pred_M1 <- predict_response(model_M1, terms = "stade [3:10]")
-pred_M2 <- predict_response(model_M2, terms = "stade [3:10]")
+pred_pearson <- predict_response(model_pearson, terms = "stage [3:10]")
+pred_overlap <- predict_response(model_Overlap, terms = "stage [3:10]")
+pred_ICQ <- predict_response(model_ICQ, terms = "stage [3:10]")
+pred_M1 <- predict_response(model_M1, terms = "stage [3:10]")
+pred_M2 <- predict_response(model_M2, terms = "stage [3:10]")
 
 plot_pred_pearson <- plot(pred_pearson,
                           show_data = TRUE,
@@ -688,22 +680,22 @@ plot_fusion <- ggarrange(plot_pred_pearson,plot_pred_overlap,
                          ncol = 2
 )
 
-annotate_figure(plot_fusion, top = text_grob("Prediction score Sens", 
+annotate_figure(plot_fusion, top = text_grob("Prediction score Sense", 
                                              color = "red", face = "bold", size = 14))
 
 
-#on augmente le détail de la prédiction
-#afin de comblé les cathégorie discrète
+# increase the detail of the prediction
+# in order to fill the discrete categories
 
-stade_dense <- seq(min(Indice_colocalisation_tout_stade$stade), 
-                   max(Indice_colocalisation_tout_stade$stade), 
+stage_dense <- seq(min(Colocalization_index_all_stages$stage), 
+                   max(Colocalization_index_all_stages$stage), 
                    length.out = 200)
 
 ###########################
-#Pearson
+# Pearson
 
 df_predict_pearson <- expand.grid(
-  stade = stade_dense,
+  stage = stage_dense,
   Score = "Coef_pearson" 
 )
 
@@ -714,10 +706,10 @@ df_predict_pearson <- df_predict_pearson %>%
   bind_cols(as_tibble(pred_pearson))
 
 
-#Overlap
+# Overlap
 
 df_predict_Overlap <- expand.grid(
-  stade = stade_dense,
+  stage = stage_dense,
   Score = "Coef_Overlap" 
 )
 
@@ -728,10 +720,10 @@ df_predict_Overlap <- df_predict_Overlap %>%
   bind_cols(as_tibble(pred_Overlap))
 
 
-#ICQ
+# ICQ
 
 df_predict_ICQ <- expand.grid(
-  stade = stade_dense,
+  stage = stage_dense,
   Score = "Coef_ICQ" 
 )
 
@@ -741,10 +733,10 @@ pred_ICQ <- predict(model_ICQ, newdata = df_predict_pearson ,
 df_predict_ICQ <- df_predict_ICQ %>%
   bind_cols(as_tibble(pred_ICQ))
 
-#M1
+# M1
 
 df_predict_M1 <- expand.grid(
-  stade = stade_dense,
+  stage = stage_dense,
   Score = "Coef_M1" 
 )
 
@@ -755,10 +747,10 @@ df_predict_M1 <- df_predict_M1 %>%
   bind_cols(as_tibble(pred_M1))
 
 
-#M2
+# M2
 
 df_predict_M2 <- expand.grid(
-  stade = stade_dense,
+  stage = stage_dense,
   Score = "Coef_M2" 
 )
 
@@ -770,8 +762,8 @@ df_predict_M2 <- df_predict_M2 %>%
   bind_cols(as_tibble(pred_M2))
 
 #####################
-#On plot tout le monde pour observer le comportement 
-#général
+# Plot everyone to observe behavior
+# general
 
 par(mfrow=c(3,2), oma = c(0, 0, 4, 0))
 
@@ -787,39 +779,39 @@ plot(pred_M2[["fit"]][,1],
      main = "M2")
 
 ##############################
-#Graphique ggplot pearson coef
+# pearson coef ggplot Graphic
 ##############################
-#on le mets avec les donnée
+# put it with the data
 
-#pearson 
+# pearson 
 
 windowsFonts( A = windowsFont("baskerville old face"))
 
-graph_pearson <- ggplot(data = Indice_colocalisation_tout_stade)+ 
-  geom_boxplot(aes(x = as.factor(stade), y = Coef_pearson), color = "blue", alpha = 0.5, fill = NA) + 
-  geom_point(aes(x = stade - 2, y = Coef_pearson), color = "blue", position = position_jitter(width = 0.1),
+graph_pearson <- ggplot(data = Colocalization_index_all_stages)+ 
+  geom_boxplot(aes(x = as.factor(stage), y = Coef_pearson), color = "blue", alpha = 0.5, fill = NA) + 
+  geom_point(aes(x = stage - 2, y = Coef_pearson), color = "blue", position = position_jitter(width = 0.1),
              size = 1) + 
   geom_ribbon(data = df_predict_pearson, 
               color = "blue",
-              aes(x = stade -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
+              aes(x = stage -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
               alpha = 0.1) +
   geom_line(data = df_predict_pearson,
-            aes(stade -2, fit[,"lwr"]), color = "grey30", size = 0.1) + 
+            aes(stage -2, fit[,"lwr"]), color = "grey30", size = 0.1) + 
   geom_line(data = df_predict_pearson,
-            aes(stade -2, fit[,"upr"]), color = "grey30", size = 0.1) + 
+            aes(stage -2, fit[,"upr"]), color = "grey30", size = 0.1) + 
   geom_line(data = df_predict_pearson, 
-            aes(x = stade -2 , y = fit[,"fit"]),
+            aes(x = stage -2 , y = fit[,"fit"]),
             linewidth = 1.2)   +
   
-  scale_x_discrete("Stade",labels = c("Stade3","Stade4","Stade5","Stade6",
-                                       "Stade7","Stade8","Stade9","Stade10"))+
+  scale_x_discrete("Stage",labels = c("Stage3","Stage4","Stage5","Stage6",
+                                       "Stage7","Stage8","Stage9","Stage10"))+
   ylim(0, 1)+
   
   labs(
     x = "Egg chamber stages",
-    y = "coefficient de Pearson",
-    title = "Évolution du score de Pearson (r) des LncARN antisens de AAACTAT et AAACTAC",
-    subtitle = "Les sondes utilisées étaient sens"
+    y = "Pearson coefficient",
+    title = "Evolution of the Pearson score (r) of antisense LncRNA AAACTAT and AAACTAC",
+    subtitle = "The probes used were sense"
   ) +
   
   theme_bw() +
@@ -834,34 +826,34 @@ graph_pearson <- ggplot(data = Indice_colocalisation_tout_stade)+
   annotate("text", x = Inf, y = Inf, label = paste0("R²= ", round(data_r2[1,1], digits = 3)), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic")
 
-#Overlap
+# Overlap
 
-graph_overlap <- ggplot(data = Indice_colocalisation_tout_stade)+ 
-  geom_boxplot(aes(x = as.factor(stade), y = Coeaf_overlap), color = "orange", alpha = 0.5,
+graph_overlap <- ggplot(data = Colocalization_index_all_stages)+ 
+  geom_boxplot(aes(x = as.factor(stage), y = Coef_overlap), color = "orange", alpha = 0.5,
                fill = NA) + 
-  geom_point(aes(x = stade - 2, y = Coeaf_overlap), color = "orange", 
+  geom_point(aes(x = stage - 2, y = Coef_overlap), color = "orange", 
              position = position_jitter(width = 0.1), size  = 1) + 
   geom_ribbon(data = df_predict_Overlap, 
               color = "orange",
-              aes(x = stade -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
+              aes(x = stage -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
               alpha = 0.1) +
   geom_line(data = df_predict_Overlap,
-            aes(stade -2, fit[,"lwr"]), color = "grey30", size = 0.1) + 
+            aes(stage -2, fit[,"lwr"]), color = "grey30", size = 0.1) + 
   geom_line(data = df_predict_Overlap,
-            aes(stade -2, fit[,"upr"]), color = "grey30", size = 0.1) +
+            aes(stage -2, fit[,"upr"]), color = "grey30", size = 0.1) +
   geom_line(data = df_predict_Overlap, 
-            aes(x = stade -2 , y = fit),
+            aes(x = stage -2 , y = fit),
             linewidth = 1.2)   +
   
-  scale_x_discrete("Stade",labels = c("Stade3","Stade4","Stade5","Stade6",
-                                       "Stade7","Stade8","Stade9","Stade10"))+
+  scale_x_discrete("Stage",labels = c("Stage3","Stage4","Stage5","Stage6",
+                                       "Stage7","Stage8","Stage9","Stage10"))+
   ylim(0, 1)+
   
   labs(
-    x = "Stade dévellopemental",
-    y = "Coeficient de MOC",
-    title = "Évolution du score de overlap (MOC) des LncARN antisens de AAACTAT et AAACTAC",
-    subtitle = "Les sondes utilisées étaient sens"
+    x = "Developmental stage",
+    y = "MOC coefficient",
+    title = "Evolution of the overlap score (MOC) of antisense LncRNA AAACTAT and AAACTAC",
+    subtitle = "The probes used were sense"
   )+
   
   theme_bw() +
@@ -876,36 +868,36 @@ graph_overlap <- ggplot(data = Indice_colocalisation_tout_stade)+
   annotate("text", x = Inf, y = Inf, label = paste0("R²= ", round(data_r2[1,2],digits = 3)), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic")
 
-#ICQ
+# ICQ
 
-graph_ICQ <- ggplot(data = Indice_colocalisation_tout_stade)+ 
-  geom_boxplot(aes(x = as.factor(stade), y = ICQ), color = "red", alpha = 0.5, fill = NA) + 
-  geom_point(aes(x = stade - 2, y = ICQ),color = "red",
+graph_ICQ <- ggplot(data = Colocalization_index_all_stages)+ 
+  geom_boxplot(aes(x = as.factor(stage), y = ICQ), color = "red", alpha = 0.5, fill = NA) + 
+  geom_point(aes(x = stage - 2, y = ICQ),color = "red",
              position = position_jitter(width = 0.1), size = 1) + 
   geom_ribbon(data = df_predict_ICQ,
               color = "red",
-              aes(x = stade -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
+              aes(x = stage -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
               alpha = 0.1) +
   geom_line(data = df_predict_ICQ,
-            aes(stade -2, fit[,"lwr"]), color = "grey30", size = 0.1) + 
+            aes(stage -2, fit[,"lwr"]), color = "grey30", size = 0.1) + 
   geom_line(data = df_predict_ICQ,
-            aes(stade -2, fit[,"upr"]), color = "grey30", size = 0.1) +
+            aes(stage -2, fit[,"upr"]), color = "grey30", size = 0.1) +
   geom_line(data = df_predict_ICQ, 
-            aes(x = stade -2 , y = fit[,"fit"]),
+            aes(x = stage -2 , y = fit[,"fit"]),
             linewidth = 1.2)    +
   
   annotate("text", x = Inf, y = Inf, label = paste0("R²= ", round(data_r2[1,3], digits = 3)), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic") + 
   
-  scale_x_discrete("Stages",labels = c("Stade3","Stade4","Stade5","Stade6",
-                                       "Stade7","Stade8","Stade9","Stade10"))+
+  scale_x_discrete("Stages",labels = c("Stage3","Stage4","Stage5","Stage6",
+                                       "Stage7","Stage8","Stage9","Stage10"))+
   ylim(-0.5, 0.5)+
   
   labs(
     x = "Egg chamber stages",
-    y = "coefficient ICQ",
-    title = "Évolution du score de ICQ des LncARN antisens de AAACTAT et AAACTAC",
-    subtitle = "Les sondes utilisées étaient sens"
+    y = "ICQ coefficient",
+    title = "Evolution of the ICQ score of antisense LncRNA AAACTAT and AAACTAC",
+    subtitle = "The probes used were sense"
   ) +
   
   theme_bw() +
@@ -918,22 +910,22 @@ graph_ICQ <- ggplot(data = Indice_colocalisation_tout_stade)+
   )
 
 
-#menders
+# manders
 
-#M1 = CTAC, M2 = CTAT
+# M1 = CTAC, M2 = CTAT
 
-data_M1_M2 <- Indice_colocalisation_tout_stade[,c(5,6,10)] %>%
+data_M1_M2 <- Colocalization_index_all_stages[,c(5,6,10)] %>%
   pivot_longer(
-    cols = colnames(Indice_colocalisation_tout_stade[,c(5,6)]), 
-    names_to = "ID_score",             
-    values_to = "valeurs"
+    cols = colnames(Colocalization_index_all_stages[,c(5,6)]), 
+    names_to = "score_ID",             
+    values_to = "values"
   )
 
-transparence = 1
+transparency = 1
 
 windowsFonts( A = windowsFont("baskerville old face"))
 
-graph_menders <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs,  color  = ID_score)) +
+graph_manders <- ggplot(data_M1_M2, aes(x = factor(stage), y = values,  color  = score_ID)) +
   
   geom_boxplot(aes(),
                fill = NA,
@@ -948,32 +940,32 @@ graph_menders <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs,  color  
   scale_color_manual(values = c("M2" = "magenta", "M1" = "green")) +
   
   geom_ribbon(data = df_predict_M2, 
-              aes(x = stade - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
+              aes(x = stage - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
               alpha = 0.15, fill = "magenta", inherit.aes = FALSE) +
   geom_line(data = df_predict_M2,
-            aes(stade -2, fit[,"lwr"]), 
+            aes(stage -2, fit[,"lwr"]), 
             color = "darkmagenta", size = 0.1, inherit.aes = FALSE) + 
   
   geom_line(data = df_predict_M2,
-            aes(stade -2, fit[,"upr"]), 
+            aes(stage -2, fit[,"upr"]), 
             color = "darkmagenta", size = 0.1, inherit.aes = FALSE) +
   
   geom_line(data = df_predict_M2, 
-            aes(x = stade - 2, y = fit), 
+            aes(x = stage - 2, y = fit), 
             color = "magenta", linewidth = 1.2, inherit.aes = FALSE) +
   
   geom_ribbon(data = df_predict_M1, 
-              aes(x = stade - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
+              aes(x = stage - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
               alpha = 0.15, fill = "green", inherit.aes = FALSE) +
   
   geom_line(data = df_predict_M1,
-            aes(stade -2, fit[,"lwr"]), color = "darkgreen", size = 0.1, inherit.aes = FALSE) + 
+            aes(stage -2, fit[,"lwr"]), color = "darkgreen", size = 0.1, inherit.aes = FALSE) + 
   
   geom_line(data = df_predict_M1,
-            aes(stade -2, fit[,"upr"]), color = "darkgreen", size = 0.1, inherit.aes = FALSE) +
+            aes(stage -2, fit[,"upr"]), color = "darkgreen", size = 0.1, inherit.aes = FALSE) +
   
   geom_line(data = df_predict_M1, 
-            aes(x = stade - 2, y = fit), 
+            aes(x = stage - 2, y = fit), 
             color = "green", linewidth = 1.2, inherit.aes = FALSE) +
   
   annotate("text", x = Inf, y = Inf, label = paste0("R²= ", round(data_r2[1,4], digits = 3)), 
@@ -986,9 +978,9 @@ graph_menders <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs,  color  
   
   labs(
     x = "Egg chamber stages",
-    y = "coefficient M1 & M2",
-    title = "Évolution du score M1 & M2 des LncARN antisens de AAACTAT et AAACTAC",
-    subtitle = "Les sondes utilisées étaient sens"
+    y = "M1 & M2 coefficient",
+    title = "Evolution of the M1 & M2 score of antisense LncRNA AAACTAT and AAACTAC",
+    subtitle = "The probes used were sense"
   ) +
   
   theme_bw() +
@@ -1003,76 +995,76 @@ graph_menders <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs,  color  
 
 
 ####################################################
-#Impression des graphiques
+# Print graphics
 ###################################################
 
 print(graph_pearson)
 print(graph_overlap)
 print(graph_ICQ)
-print(graph_menders)
+print(graph_manders)
 
-ggarrange(graph_pearson,graph_overlap,graph_ICQ,graph_menders)
+ggarrange(graph_pearson,graph_overlap,graph_ICQ,graph_manders)
 
 #################################################
 #################################################
-#test de variance entre Y
+# variance test between Y
 
-data_concatener <- rbind(indice_colocalisation_stade10, indice_colocalisation_stade3,
-                         indice_colocalisation_stade4, indice_colocalisation_stade5,
-                         indice_colocalisation_stade6, indice_colocalisation_stade7, 
-                         indice_colocalisation_stade8, indice_colocalisation_stade9)
-data_concatener <- data_concatener[,c(-3,-4,-7,-8)]
+concatenated_data <- rbind(colocalization_index_stage10, colocalization_index_stage3,
+                         colocalization_index_stage4, colocalization_index_stage5,
+                         colocalization_index_stage6, colocalization_index_stage7, 
+                         colocalization_index_stage8, colocalization_index_stage9)
+concatenated_data <- concatenated_data[,c(-3,-4,-7,-8)]
 
-pairs.panels(data_concatener[,c(1:5)])
+pairs.panels(concatenated_data[,c(1:5)])
 
 
 par(mfrow=c(3,2), oma = c(0, 0, 3, 0))
 
-hist(data_concatener$Coef_pearson,
-     main = "Pearson sens")
+hist(concatenated_data$Coef_pearson,
+     main = "Pearson sense")
 
-hist(data_concatener$Coeaf_overlap,
-     main = "Overlap sens")
+hist(concatenated_data$Coef_overlap,
+     main = "Overlap sense")
 
-hist(data_concatener$M1,
-     main = "M1 sens")
+hist(concatenated_data$M1,
+     main = "M1 sense")
 
-hist(data_concatener$M2,
-     main = "M2 sens")
+hist(concatenated_data$M2,
+     main = "M2 sense")
 
-hist(data_concatener$ICQ,
-     main = "ICQ sens")
+hist(concatenated_data$ICQ,
+     main = "ICQ sense")
 
-mtext("Sens", outer = TRUE, cex = 1.5, font = 2)
+mtext("Sense", outer = TRUE, cex = 1.5, font = 2)
 
-boxplot(data_concatener,
-        main = " Sonde sens")
+boxplot(concatenated_data,
+        main = " Sense probe")
 
 for ( i in c(1:5)){
   
-  name = colnames(data_concatener)[i]
+  name = colnames(concatenated_data)[i]
   
-  nombre_0 <- (length(which(data_concatener[,i] == 0)))
+  number_0 <- (length(which(concatenated_data[,i] == 0)))
   
-  print(paste("Nombre de 0 pour",name , nombre_0))
+  print(paste("Number of 0 for",name , number_0))
   
 }
 
 ############################
 
-#on le mets avec les donnée
+# put it with the data
 
-#pearson 
+# pearson 
 
 
-data_Per_ICQ<- Indice_colocalisation_tout_stade[,c(1,9,10)] %>%
+data_Per_ICQ<- Colocalization_index_all_stages[,c(1,9,10)] %>%
   pivot_longer(
-    cols = colnames(Indice_colocalisation_tout_stade[,c(1,9)]), 
-    names_to = "ID_score",             
-    values_to = "valeurs"
+    cols = colnames(Colocalization_index_all_stages[,c(1,9)]), 
+    names_to = "score_ID",             
+    values_to = "values"
   )
 
-plot_ICQ_per <- ggplot(data_Per_ICQ, aes(x = factor(stade), y = valeurs, fill = ID_score))+ 
+plot_ICQ_per <- ggplot(data_Per_ICQ, aes(x = factor(stage), y = values, fill = score_ID))+ 
   
   geom_boxplot(alpha = 0.5, 
                outlier.shape = NA, 
@@ -1087,40 +1079,40 @@ plot_ICQ_per <- ggplot(data_Per_ICQ, aes(x = factor(stade), y = valeurs, fill = 
   scale_color_manual(values = c("Coef_pearson" = "blue", "ICQ" = "red")) +
   
   geom_ribbon(data = df_predict_pearson, 
-              aes(x = stade -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
+              aes(x = stage -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
               alpha = 0.09, fill = "blue", inherit.aes = FALSE) +
   geom_line(data = df_predict_pearson,
-            aes(stade -2, fit[,"lwr"]), color = "darkblue", size = 0.1,
+            aes(stage -2, fit[,"lwr"]), color = "darkblue", size = 0.1,
             inherit.aes = FALSE) + 
   geom_line(data = df_predict_pearson,
-            aes(stade -2, fit[,"upr"]), color = "darkblue", size = 0.1,
+            aes(stage -2, fit[,"upr"]), color = "darkblue", size = 0.1,
             inherit.aes = FALSE) + 
   geom_line(data = df_predict_pearson, 
-            aes(x = stade -2 , y = fit[,"fit"]),
+            aes(x = stage -2 , y = fit[,"fit"]),
             linewidth = 1.2, color = "blue",inherit.aes = FALSE)+
   
   geom_ribbon(data = df_predict_ICQ, 
-              aes(x = stade -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
+              aes(x = stage -2 , ymin = fit[,"lwr"], ymax = fit[,"upr"]), 
               alpha = 0.09, fill = "red",inherit.aes = FALSE) +
   geom_line(data = df_predict_ICQ,
-            aes(stade -2, fit[,"lwr"]), color = "darkred", size = 0.1,
+            aes(stage -2, fit[,"lwr"]), color = "darkred", size = 0.1,
             inherit.aes = FALSE) + 
   geom_line(data = df_predict_ICQ,
-            aes(stade -2, fit[,"upr"]), color = "darkred", size = 0.1,
+            aes(stage -2, fit[,"upr"]), color = "darkred", size = 0.1,
             inherit.aes = FALSE) +
   geom_line(data = df_predict_ICQ, 
-            aes(x = stade -2 , y = fit[,"fit"]),
+            aes(x = stage -2 , y = fit[,"fit"]),
             linewidth = 1.2, color = "red",inherit.aes = FALSE)    +
   
-  scale_x_discrete("Stages",labels = c("Stade3","Stade4","Stade5","Stade6",
-                                       "Stade7","Stade8","Stade9","Stade10"))+
+  scale_x_discrete("Stages",labels = c("Stage3","Stage4","Stage5","Stage6",
+                                       "Stage7","Stage8","Stage9","Stage10"))+
   ylim(0, 1)+
   
   labs(
-    x = "Stade de dévelopement des oeufs",
-    y = "coeficient Pearson & ICQ",
-    title = "Évolution de la colocalisaton des LncARN antisens de AAACTAT et AAACTAC",
-    subtitle = "Les sondes utilisée étais sens"
+    x = "Egg development stage",
+    y = "Pearson & ICQ coefficient",
+    title = "Evolution of colocalization of antisense LncRNA AAACTAT and AAACTAC",
+    subtitle = "The probes used were sense"
   ) +
   
   theme_bw() +
@@ -1138,13 +1130,13 @@ plot_ICQ_per <- ggplot(data_Per_ICQ, aes(x = factor(stade), y = valeurs, fill = 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic", color = "blue")
 
 
-#Grahique poster
+# Poster graphic
 
-transparence = 1
+transparency = 1
 
 windowsFonts( A = windowsFont("baskerville old face"))
 
-plot_mender_pres <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs, color = ID_score, fill = NA)) +
+plot_manders_pres <- ggplot(data_M1_M2, aes(x = factor(stage), y = values, color = score_ID)) +
   
   geom_boxplot(aes(),
                alpha = 0.7, 
@@ -1159,43 +1151,43 @@ plot_mender_pres <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs, color
   scale_color_manual(values = c("M1" = "green", "M2" = "magenta")) +
   
   geom_ribbon(data = df_predict_M1, 
-              aes(x = stade - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
+              aes(x = stage - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
               alpha = 0.15, fill = "green", inherit.aes = FALSE) +
   geom_line(data = df_predict_M1,
-            aes(stade -2, fit[,"lwr"]), 
+            aes(stage -2, fit[,"lwr"]), 
             color = "darkgreen", size = 0.1, inherit.aes = FALSE) + 
   
   geom_line(data = df_predict_M1,
-            aes(stade -2, fit[,"upr"]), 
+            aes(stage -2, fit[,"upr"]), 
             color = "darkgreen", size = 0.1, inherit.aes = FALSE) +
   
   geom_line(data = df_predict_M1, 
-            aes(x = stade - 2, y = fit[,"fit"]), 
+            aes(x = stage - 2, y = fit[,"fit"]), 
             color = "green", linewidth = 1.2, inherit.aes = FALSE) +
   
   geom_ribbon(data = df_predict_M2, 
-              aes(x = stade - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
+              aes(x = stage - 2, ymin = fit[,"lwr"], ymax = fit[,"upr"], y = NULL, fill = NULL), 
               alpha = 0.15, fill = "magenta", inherit.aes = FALSE) +
   
   geom_line(data = df_predict_M2,
-            aes(stade -2, fit[,"lwr"]), color = "darkmagenta", size = 0.1, inherit.aes = FALSE) + 
+            aes(stage -2, fit[,"lwr"]), color = "darkmagenta", size = 0.1, inherit.aes = FALSE) + 
   
   geom_line(data = df_predict_M2,
-            aes(stade -2, fit[,"upr"]), color = "darkmagenta", size = 0.1, inherit.aes = FALSE) +
+            aes(stage -2, fit[,"upr"]), color = "darkmagenta", size = 0.1, inherit.aes = FALSE) +
   
   geom_line(data = df_predict_M2, 
-            aes(x = stade - 2, y = fit[,"fit"]), 
+            aes(x = stage - 2, y = fit[,"fit"]), 
             color = "magenta", linewidth = 1.2, inherit.aes = FALSE)  +
   
-  scale_x_discrete("Stages",labels = c("Stade3","Stade4","Stade5","Stade6",
-                                       "Stade7","Stade8","Stade9","Stade10"))+
+  scale_x_discrete("Stages",labels = c("Stage3","Stage4","Stage5","Stage6",
+                                       "Stage7","Stage8","Stage9","Stage10"))+
   ylim(0, 1)+
   
   labs(
-    x = "Stade de dévelopement des oeufs",
-    y = "coeficient M1 & M2",
-    title = "Évolution de la colocalisaton des LncARN antisens de AAACTAT et AAACTAC",
-    subtitle = "Les sondes utilisée étais sens"
+    x = "Egg development stage",
+    y = "M1 & M2 coefficient",
+    title = "Evolution of colocalization of antisense LncRNA AAACTAT and AAACTAC",
+    subtitle = "The probes used were sense"
   ) +
   
   theme_bw() +
@@ -1214,95 +1206,82 @@ plot_mender_pres <- ggplot(data_M1_M2, aes(x = factor(stade), y = valeurs, color
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic", color = "green")
 
 print(plot_ICQ_per)
-print(plot_mender_pres)
+print(plot_manders_pres)
 
-#bocplot pour chaque score
+# boxplot for each score
 
 par(mfrow=c(3,2), oma = c(0, 0, 3, 0))
 
-boxplot(data = Indice_colocalisation_tout_stade, Coef_pearson ~ stade)
-boxplot(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ stade)
-boxplot(data = Indice_colocalisation_tout_stade, ICQ ~ stade)
-boxplot(data = Indice_colocalisation_tout_stade, M1 ~ stade)
-boxplot(data = Indice_colocalisation_tout_stade, M2 ~ stade)
+boxplot(data = Colocalization_index_all_stages, Coef_pearson ~ stage)
+boxplot(data = Colocalization_index_all_stages, Coef_overlap ~ stage)
+boxplot(data = Colocalization_index_all_stages, ICQ ~ stage)
+boxplot(data = Colocalization_index_all_stages, M1 ~ stage)
+boxplot(data = Colocalization_index_all_stages, M2 ~ stage)
 
-mtext("Distribution de la variance en fonction du stade \n pour les sondes sens"
+mtext("Distribution of variance according to stage \n for sense probes"
       , outer = TRUE, cex = 1.2, font = 1.5)
 
 ################################
-#anova pour spline
+# anova for spline
 ###############################
 
 
-#pearson
-model_pearson_1 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ stade)
-model_pearson_2 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ poly(stade,2))
-model_pearson_3 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ bs(stade,3))
-model_pearson_4 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ bs(stade,4))
-model_pearson_5 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ bs(stade,5))
-model_pearson_6 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ bs(stade,6))
-model_pearson_7 <- lm(data = Indice_colocalisation_tout_stade, Coef_pearson ~ bs(stade,7))
+# pearson
+model_pearson_1 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ stage)
+model_pearson_2 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ poly(stage,2))
+model_pearson_3 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ bs(stage,3))
+model_pearson_4 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ bs(stage,4))
+model_pearson_5 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ bs(stage,5))
+model_pearson_6 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ bs(stage,6))
+model_pearson_7 <- lm(data = Colocalization_index_all_stages, Coef_pearson ~ bs(stage,7))
 
 anova(model_pearson_1,model_pearson_2, model_pearson_3, model_pearson_4, model_pearson_5, model_pearson_6, model_pearson_7)
 
-#overlap
+# overlap
 
 
-model_Overlap_1 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ stade)
-model_Overlap_2 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ poly(stade,2))
-model_Overlap_3 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ bs(stade,3))
-model_Overlap_4 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ bs(stade,4))
-model_Overlap_5 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ bs(stade,5))
-model_Overlap_6 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ bs(stade,6))
-model_Overlap_7 <- rlm(data = Indice_colocalisation_tout_stade, Coeaf_overlap ~ bs(stade,7))
+model_Overlap_1 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ stage)
+model_Overlap_2 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ poly(stage,2))
+model_Overlap_3 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ bs(stage,3))
+model_Overlap_4 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ bs(stage,4))
+model_Overlap_5 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ bs(stage,5))
+model_Overlap_6 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ bs(stage,6))
+model_Overlap_7 <- rlm(data = Colocalization_index_all_stages, Coef_overlap ~ bs(stage,7))
 
 anova(model_Overlap_1,model_Overlap_2, model_Overlap_3, model_Overlap_4, model_Overlap_5, model_Overlap_6, model_Overlap_7)
 
 
-#ICQ
+# ICQ
 
-model_ICQ_1 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ stade)
-model_ICQ_2 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ poly(stade,2))
-model_ICQ_3 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ bs(stade,3))
-model_ICQ_4 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ bs(stade,4))
-model_ICQ_5 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ bs(stade,5))
-model_ICQ_6 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ bs(stade,6))
-model_ICQ_7 <- rlm(data = Indice_colocalisation_tout_stade, ICQ ~ bs(stade,7))
+model_ICQ_1 <- rlm(data = Colocalization_index_all_stages, ICQ ~ stage)
+model_ICQ_2 <- rlm(data = Colocalization_index_all_stages, ICQ ~ poly(stage,2))
+model_ICQ_3 <- rlm(data = Colocalization_index_all_stages, ICQ ~ bs(stage,3))
+model_ICQ_4 <- rlm(data = Colocalization_index_all_stages, ICQ ~ bs(stage,4))
+model_ICQ_5 <- rlm(data = Colocalization_index_all_stages, ICQ ~ bs(stage,5))
+model_ICQ_6 <- rlm(data = Colocalization_index_all_stages, ICQ ~ bs(stage,6))
+model_ICQ_7 <- rlm(data = Colocalization_index_all_stages, ICQ ~ bs(stage,7))
 
 anova(model_ICQ_1,model_ICQ_2, model_ICQ_3, model_ICQ_4, model_ICQ_5, model_ICQ_6, model_ICQ_7)
 
-#M1
-model_M1_1 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  stade)
-model_M1_2 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  poly(stade,2))
-model_M1_3 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,3))
-model_M1_4 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,4))
-model_M1_5 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,5))
-model_M1_6 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,6))
-model_M1_7 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,7))
+# M1
+model_M1_1 <- rlm(data = Colocalization_index_all_stages, M1 ~  stage)
+model_M1_2 <- rlm(data = Colocalization_index_all_stages, M1 ~  poly(stage,2))
+model_M1_3 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,3))
+model_M1_4 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,4))
+model_M1_5 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,5))
+model_M1_6 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,6))
+model_M1_7 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,7))
 
 anova(model_M1_1,model_M1_2, model_M1_3, model_M1_4, model_M1_5, model_M1_6, model_M1_7)
 
-#M2
+# M2
 
-model_M2_1 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  stade)
-model_M2_2 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  poly(stade,2))
-model_M2_3 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,3))
-model_M2_4 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,4))
-model_M2_5 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,5))
-model_M2_6 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,6))
-model_M2_7 <- rlm(data = Indice_colocalisation_tout_stade, M1 ~  bs(stade,7))
+model_M2_1 <- rlm(data = Colocalization_index_all_stages, M1 ~  stage)
+model_M2_2 <- rlm(data = Colocalization_index_all_stages, M1 ~  poly(stage,2))
+model_M2_3 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,3))
+model_M2_4 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,4))
+model_M2_5 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,5))
+model_M2_6 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,6))
+model_M2_7 <- rlm(data = Colocalization_index_all_stages, M1 ~  bs(stage,7))
 
 anova(model_M2_1,model_M2_2, model_M2_3, model_M2_4, model_M2_5, model_M2_6, model_M2_7)
-
-
-
-
-
-
-
-
-
-
-
-
-

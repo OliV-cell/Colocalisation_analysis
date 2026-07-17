@@ -8,9 +8,9 @@
 //==================================================================
 
 getBoolean("Alright, brief introduction, create 3 folders, one to store the images \n" +
-"another for coefficient data and a last one for graph data \n"
+"another for coefficient data and a last one for graph data \n" +
 "Also, depending on the number of images, this can take time, let's say a few minutes \n " + 
-"Also, we calculate the threshold by cutting off the weakest 50% (at the median). \n " + 
+"Also, we calculate the threshold with Renyi entropy \n " + 
 "One more thing, currently I'm still working on a version where Z-stacks are in the same lif file so separate them first! \n" + 
 "It's pretty great!", "Alright", "Never mind");
 
@@ -213,7 +213,7 @@ for (i = 1; i <=size; i++) {
 	// Opening the plugin and launching the calculation of Pearson overlap MM cytofluo ICA and CCF
 	
 	
-	 run("JACoP ", "imga=[" + "C2_Zstack" + name + "Image_" + i + ".tif" + "] imgb=[" + "C3_Zstack" + name + "Image_" + i + ".tif" + "] thra=" + thresholda + "  thrb=" + thresholdb + " pearson overl[...]
+	 run("JACoP ", "imga=[" + "C2_Zstack" + name + "Image_" + i + ".tif" + "] imgb=[" + "C3_Zstack" + name + "Image_" + i + ".tif" + "] thra=" + thresholda + "  thrb=" + thresholdb + " pearson overlap mm ccf=100 cytofluo ica");
 	 //Closing unnecessary windows
 	 
 	 selectWindow("ICA A (C2_Zstack" + name + "Image_" + i + ".tif)");
@@ -268,8 +268,7 @@ for (i = 1; i <=size; i++) {
 	 
 // --- JACoP WINDOW KILLER ---
 // This uses JavaScript to close windows that ImageJ doesn't see
-eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/0[...]
-	 
+eval("script", "importClass(java.awt.Frame); var frames = Frame.getFrames(); for (var i=0; i<frames.length; i++) { if (frames[i].getTitle().indexOf('Just Another Colocalisation Plugin v2.1.4 21/02/03') != -1) { frames[i].dispose(); } }");	 
 	 
 	 //Selection and storage of graph data for R
 };
@@ -286,6 +285,7 @@ File.saveString(logContent, filePath);
 
 print("Log content saved to: " + filePath);
 
+getBoolean("Finish", "Ok", "Oki!!");
 
 //Following this, I created an R script to analyze the information from the file
 //So use it, or at least the file reading function, I will refine it further

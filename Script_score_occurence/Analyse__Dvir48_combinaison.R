@@ -1,518 +1,505 @@
 #################################
 ################################
-#Gaph des combinaison avec CTAC
+#Graph of combinations with CTAC
 ###############################
 ###############################
-#activation des packages
+#package activation
 
 library(car)
-library(multcompView)
 library(dplyr)
-library(agricolae)
-library(multcomp)
-library(rcompanion)
 library(tidyr)
-library(nlstools)
 library(psych)
 library(qpcR)
-library(emmeans)
-library(multcomp)
-library(multcompView)
-
-library(gamm4)
+library(mgcv)
 library(gvlma)
-library(stargazer)
 library(performance)
 library(see)
-#représentation graphique
+#graphical representation
 library(ggplot2)
-library(ggpubr)
-library(ggpmisc)
-library(pammtools)
 
 
 
-decompte <- function(data_source, data_puit){
+count_occurrences <- function(data_source, data_well){
   for (i in c(3:12)){
     #null
-    data_puit[[i-2,1]] <- length(which(data_source[,i] == "rien"))
+    data_well[[i-2,1]] <- length(which(data_source[,i] == "rien"))
     
-    #faible
-    data_puit[[i-2,2]] <- length(which(data_source[,i] == "faible"))
+    #low
+    data_well[[i-2,2]] <- length(which(data_source[,i] == "faible"))
     
-    #moyen
-    data_puit[[i-2,3]] <- length(which(data_source[,i] == "moyen"))
+    #medium
+    data_well[[i-2,3]] <- length(which(data_source[,i] == "moyen"))
     
-    #elever
-    data_puit[[i-2,4]] <- length(which(data_source[,i] == "elever"))
+    #high
+    data_well[[i-2,4]] <- length(which(data_source[,i] == "elever"))
   }
   
-  return(data_puit)
+  return(data_well)
   
 }
 
-data_CTAC_aveccaac_antisens <- read.csv("CTAC_avec_caac.csv",
+data_CTAC_withcaac_antisense <- read.csv("CTAC_avec_caac.csv",
                                         sep=";", dec=",", header=FALSE)
 
-data_CTAC_avecctat_antisens <- read.csv("CTAC_avec_ctat.csv",
+data_CTAC_withctat_antisense <- read.csv("CTAC_avec_ctat.csv",
                                         sep=";", dec=",", header=FALSE)
 
-data_CTAC_avecctat_antisens_rep3 <- read.csv("CTAC_avec_ctat_rep3.csv",
+data_CTAC_withctat_antisense_rep3 <- read.csv("CTAC_avec_ctat_rep3.csv",
                                              sep=";", dec=",", header=FALSE)
 
-data_CTAC_avecttac_antisens <- read.csv("CTAC_avec_ttac.csv",
+data_CTAC_withttac_antisense <- read.csv("CTAC_avec_ttac.csv",
                                         sep=";", dec=",", header=FALSE)
 
-data_CTAC_avecttac_antisens_rep2 <- read.csv("CTAC_avec_ttac_rep2.csv",
+data_CTAC_withttac_antisense_rep2 <- read.csv("CTAC_avec_ttac_rep2.csv",
                                              sep=";", dec=",", header=FALSE)
 
-data_CTAC_avectat_sens <- read.csv("CTAC_sens_avec_ctat_sens.csv",
+data_CTAC_withtat_sense <- read.csv("CTAC_sens_avec_ctat_sens.csv",
                                    sep=";", dec=",", header=FALSE)
 
-data_CTAC_avectat_sens_rep1 <- read.csv("CTAC_sens_avec_ctat_sens_rep1.csv",
+data_CTAC_withtat_sense_rep1 <- read.csv("CTAC_sens_avec_ctat_sens_rep1.csv",
                                         sep=";", dec=",", header=FALSE)
 
-data_TTACavecCTAC_antisens <- read.csv("TTAC_avec_CTAC.csv",
+data_TTACwithCTAC_antisense <- read.csv("TTAC_avec_CTAC.csv",
                                        sep=";", dec=",", header=FALSE)
 
-data_TTACavecCTAC_antisens_rep2 <- read.csv("TTAC_avec_CTAC_rep2.csv",
+data_TTACwithCTAC_antisense_rep2 <- read.csv("TTAC_avec_CTAC_rep2.csv",
                                             sep=";", dec=",", header=FALSE)
 
-data_CTATavecCTAC_antisens <- read.csv("CTAT_avec_CTAC.csv",
+data_CTATwithCTAC_antisense <- read.csv("CTAT_avec_CTAC.csv",
                                        sep=";", dec=",", header=FALSE)
 
-data_CTATavecCTAC_antisens_rep3 <- read.csv("CTAT_avec_CTAC_rep3.csv",
+data_CTATwithCTAC_antisense_rep3 <- read.csv("CTAT_avec_CTAC_rep3.csv",
                                             sep=";", dec=",", header=FALSE)
 
-data_CTAT_avecCTAC_sens <- read.csv("CTAT_sens_avec_CTAC_sens.csv",
+data_CTAT_withCTAC_sense <- read.csv("CTAT_sens_avec_CTAC_sens.csv",
                                     sep=";", dec=",", header=FALSE)
 
-data_CTAT_avecCTAC_sens_rep1 <- read.csv("CTAT_sens_avec_CTAC_sens_rep1.csv",
+data_CTAT_withCTAC_sense_rep1 <- read.csv("CTAT_sens_avec_CTAC_sens_rep1.csv",
                                          sep=";", dec=",", header=FALSE)
 
-data_CAACavecCTAC_antisens <- read.csv("CAAC_avec_CTAC.csv",
+data_CAACwithCTAC_antisense <- read.csv("CAAC_avec_CTAC.csv",
                                        sep=";", dec=",", header=FALSE)
 
-#data_CAACavecCTAC_antisens <- read.csv("Analyse_photo_ovaire_R_ttac.csv",
+#data_CAACwithCTAC_antisense <- read.csv("Analyse_photo_ovaire_R_ttac.csv",
 #sep=";", dec=",", header=FALSE)
 
-CTAC_aveccaac_antisens <- matrix( nrow = 10, ncol = 4)
+CTAC_withcaac_antisense <- matrix( nrow = 10, ncol = 4)
 
-CTAC_avecttac_antisens <- matrix( nrow = 10, ncol = 4)
+CTAC_withttac_antisense <- matrix( nrow = 10, ncol = 4)
 
-CTAC_avecttac_antisens_rep2 <- matrix( nrow = 10, ncol = 4)
+CTAC_withttac_antisense_rep2 <- matrix( nrow = 10, ncol = 4)
 
-CTAC_avecctat_antisens <- matrix( nrow = 10, ncol = 4)
+CTAC_withctat_antisense <- matrix( nrow = 10, ncol = 4)
 
-CTAC_avecctat_antisens_rep3 <- matrix( nrow = 10, ncol = 4)
+CTAC_withctat_antisense_rep3 <- matrix( nrow = 10, ncol = 4)
 
-TTACavecCTAC_antisens <- matrix( nrow = 10, ncol = 4)
+TTACwithCTAC_antisense <- matrix( nrow = 10, ncol = 4)
 
-TTACavecCTAC_antisens_rep2 <- matrix( nrow = 10, ncol = 4)
+TTACwithCTAC_antisense_rep2 <- matrix( nrow = 10, ncol = 4)
 
-CTATavecCTAC_antisens <- matrix( nrow = 10, ncol = 4)
+CTATwithCTAC_antisense <- matrix( nrow = 10, ncol = 4)
 
-CTATavecCTAC_antisens_rep3 <- matrix( nrow = 10, ncol = 4)
+CTATwithCTAC_antisense_rep3 <- matrix( nrow = 10, ncol = 4)
 
-CAACavecCTAC_antisens <- matrix( nrow = 10, ncol = 4)
+CAACwithCTAC_antisense <- matrix( nrow = 10, ncol = 4)
 
-CTAC_avecctat_sens <- matrix( nrow = 10, ncol = 4)
+CTAC_withctat_sense <- matrix( nrow = 10, ncol = 4)
 
-CTAC_avecctat_sens_rep1 <- matrix( nrow = 10, ncol = 4)
+CTAC_withctat_sense_rep1 <- matrix( nrow = 10, ncol = 4)
 
-CTAT_avecCTAC_sens <- matrix( nrow = 10, ncol = 4)
+CTAT_withCTAC_sense <- matrix( nrow = 10, ncol = 4)
 
-CTAT_avecCTAC_sens_rep1 <- matrix( nrow = 10, ncol = 4)
+CTAT_withCTAC_sense_rep1 <- matrix( nrow = 10, ncol = 4)
 
-#Décompte des occurences de différente intensitée
+#Counting occurrences of different intensities
 
-CTAC_aveccaac_antisens <- decompte(data_source = data_CTAC_aveccaac_antisens,data_puit = CTAC_aveccaac_antisens)
+CTAC_withcaac_antisense <- count_occurrences(data_source = data_CTAC_withcaac_antisense,data_well = CTAC_withcaac_antisense)
 
-CTAC_avecttac_antisens <- decompte(data_source = data_CTAC_avecttac_antisens,data_puit = CTAC_avecttac_antisens)
+CTAC_withttac_antisense <- count_occurrences(data_source = data_CTAC_withttac_antisense,data_well = CTAC_withttac_antisense)
 
-CTAC_avecttac_antisens_rep2 <- decompte(data_source = data_CTAC_avecttac_antisens_rep2,data_puit = CTAC_avecttac_antisens_rep2)
+CTAC_withttac_antisense_rep2 <- count_occurrences(data_source = data_CTAC_withttac_antisense_rep2,data_well = CTAC_withttac_antisense_rep2)
 
-CTAC_avecctat_antisens <- decompte(data_source = data_CTAC_avecctat_antisens,data_puit = CTAC_avecctat_antisens)
+CTAC_withctat_antisense <- count_occurrences(data_source = data_CTAC_withctat_antisense,data_well = CTAC_withctat_antisense)
 
-CTAC_avecctat_antisens_rep3 <- decompte(data_source = data_CTAC_avecctat_antisens_rep3,data_puit = CTAC_avecctat_antisens_rep3)
+CTAC_withctat_antisense_rep3 <- count_occurrences(data_source = data_CTAC_withctat_antisense_rep3,data_well = CTAC_withctat_antisense_rep3)
 
-TTACavecCTAC_antisens <- decompte(data_source = data_TTACavecCTAC_antisens,data_puit = TTACavecCTAC_antisens )
+TTACwithCTAC_antisense <- count_occurrences(data_source = data_TTACwithCTAC_antisense,data_well = TTACwithCTAC_antisense )
 
-TTACavecCTAC_antisens_rep2 <- decompte(data_source = data_TTACavecCTAC_antisens_rep2,data_puit = TTACavecCTAC_antisens_rep2 )
+TTACwithCTAC_antisense_rep2 <- count_occurrences(data_source = data_TTACwithCTAC_antisense_rep2,data_well = TTACwithCTAC_antisense_rep2 )
 
-CTATavecCTAC_antisens <- decompte(data_source = data_CTATavecCTAC_antisens,data_puit = CTATavecCTAC_antisens)
+CTATwithCTAC_antisense <- count_occurrences(data_source = data_CTATwithCTAC_antisense,data_well = CTATwithCTAC_antisense)
 
-CTATavecCTAC_antisens_rep3 <- decompte(data_source = data_CTATavecCTAC_antisens_rep3,data_puit = CTATavecCTAC_antisens_rep3)
+CTATwithCTAC_antisense_rep3 <- count_occurrences(data_source = data_CTATwithCTAC_antisense_rep3,data_well = CTATwithCTAC_antisense_rep3)
 
-CAACavecCTAC_antisens <- decompte(data_source = data_CAACavecCTAC_antisens,data_puit = CAACavecCTAC_antisens)
+CAACwithCTAC_antisense <- count_occurrences(data_source = data_CAACwithCTAC_antisense,data_well = CAACwithCTAC_antisense)
 
-CTAC_avecctat_sens <- decompte(data_source = data_CTAC_avectat_sens,data_puit = CTAC_avecctat_sens)
+CTAC_withctat_sense <- count_occurrences(data_source = data_CTAC_withtat_sense,data_well = CTAC_withctat_sense)
 
-CTAC_avecctat_sens_rep1 <- decompte(data_source = data_CTAC_avectat_sens_rep1,data_puit = CTAC_avecctat_sens_rep1)
+CTAC_withctat_sense_rep1 <- count_occurrences(data_source = data_CTAC_withtat_sense_rep1,data_well = CTAC_withctat_sense_rep1)
 
-CTAT_avecCTAC_sens <- decompte(data_source = data_CTAT_avecCTAC_sens ,data_puit = CTAT_avecCTAC_sens)
+CTAT_withCTAC_sense <- count_occurrences(data_source = data_CTAT_withCTAC_sense ,data_well = CTAT_withCTAC_sense)
 
-CTAT_avecCTAC_sens_rep1 <- decompte(data_source = data_CTAT_avecCTAC_sens_rep1 ,data_puit = CTAT_avecCTAC_sens_rep1)
+CTAT_withCTAC_sense_rep1 <- count_occurrences(data_source = data_CTAT_withCTAC_sense_rep1 ,data_well = CTAT_withCTAC_sense_rep1)
 
-noms_matrices <- c("CTAC_aveccaac_antisens", "CTAC_avecttac_antisens", "CTAC_avecttac_antisens_rep2",
-                   "CTAC_avecctat_antisens", "CTAC_avecctat_antisens_rep3")
+matrix_names <- c("CTAC_withcaac_antisense", "CTAC_withttac_antisense", "CTAC_withttac_antisense_rep2",
+                   "CTAC_withctat_antisense", "CTAC_withctat_antisense_rep3")
 
-total_observations <- sum(sapply(mget(noms_matrices), sum, na.rm = TRUE))
+total_observations <- sum(sapply(mget(matrix_names), sum, na.rm = TRUE))
 
 print(total_observations)
 
-matrice_fusionnee <- Reduce("+", mget(noms_matrices))
+merged_matrix <- Reduce("+", mget(matrix_names))
 
-comptage_par_ligne <- rowSums(matrice_fusionnee, na.rm = TRUE)
+count_per_row <- rowSums(merged_matrix, na.rm = TRUE)
 
-noms_stades <- paste("Stade", 1:(1 + length(comptage_par_ligne) - 1))
-names(comptage_par_ligne) <- noms_stades
-
-
-print(comptage_par_ligne)
+stage_names <- paste("Stage", 1:(1 + length(count_per_row) - 1))
+names(count_per_row) <- stage_names
 
 
-#renome les colone
+print(count_per_row)
 
-colnames(CTAC_aveccaac_antisens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAC_avecttac_antisens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAC_avecttac_antisens_rep2) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAC_avecctat_antisens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAC_avecctat_antisens_rep3) <- c("null", "faible", "moyen", "élevé")
-colnames(TTACavecCTAC_antisens) <- c("null", "faible", "moyen", "élevé")
-colnames(TTACavecCTAC_antisens_rep2) <- c("null", "faible", "moyen", "élevé")
-colnames(CTATavecCTAC_antisens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTATavecCTAC_antisens_rep3) <- c("null", "faible", "moyen", "élevé")
-colnames(CAACavecCTAC_antisens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAC_avecctat_sens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAT_avecCTAC_sens) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAC_avecctat_sens_rep1) <- c("null", "faible", "moyen", "élevé")
-colnames(CTAT_avecCTAC_sens_rep1) <- c("null", "faible", "moyen", "élevé")
 
-#Boucle de calcule du score pour chaque stade et chaque satellite
+#rename columns
 
-score_occurence_data_combinaison <- data.frame(score_CTAC_aveccaac_antisens = rep(0,10),
+colnames(CTAC_withcaac_antisense) <- c("null", "low", "medium", "high")
+colnames(CTAC_withttac_antisense) <- c("null", "low", "medium", "high")
+colnames(CTAC_withttac_antisense_rep2) <- c("null", "low", "medium", "high")
+colnames(CTAC_withctat_antisense) <- c("null", "low", "medium", "high")
+colnames(CTAC_withctat_antisense_rep3) <- c("null", "low", "medium", "high")
+colnames(TTACwithCTAC_antisense) <- c("null", "low", "medium", "high")
+colnames(TTACwithCTAC_antisense_rep2) <- c("null", "low", "medium", "high")
+colnames(CTATwithCTAC_antisense) <- c("null", "low", "medium", "high")
+colnames(CTATwithCTAC_antisense_rep3) <- c("null", "low", "medium", "high")
+colnames(CAACwithCTAC_antisense) <- c("null", "low", "medium", "high")
+colnames(CTAC_withctat_sense) <- c("null", "low", "medium", "high")
+colnames(CTAT_withCTAC_sense) <- c("null", "low", "medium", "high")
+colnames(CTAC_withctat_sense_rep1) <- c("null", "low", "medium", "high")
+colnames(CTAT_withCTAC_sense_rep1) <- c("null", "low", "medium", "high")
+
+#Score calculation loop for each stage and each satellite
+
+score_occurrence_data_combination <- data.frame(score_CTAC_withcaac_antisense = rep(0,10),
                                                
-                                               score_CTAC_avecttac_antisens = rep(0,10),
+                                               score_CTAC_withttac_antisense = rep(0,10),
                                                
-                                               score_CTAC_avecctat_antisens = rep(0,10),
+                                               score_CTAC_withctat_antisense = rep(0,10),
                                                
-                                               score_TTACavecCTAC_antisens = rep(0,10),
+                                               score_TTACwithCTAC_antisense = rep(0,10),
                                                
-                                               score_CTATavecCTAC_antisens = rep(0,10),
+                                               score_CTATwithCTAC_antisense = rep(0,10),
                                                
-                                               score_CAACavecCTAC_antisens = rep(0,10), 
+                                               score_CAACwithCTAC_antisense = rep(0,10), 
                                                
-                                               score_CTAC_avecctat_sens = rep(0,10), 
+                                               score_CTAC_withctat_sense = rep(0,10), 
                                                
-                                               score_CTAT_avecCTAC_sens = rep(0,10),
+                                               score_CTAT_withCTAC_sense = rep(0,10),
                                                
-                                               score_CTATavecCTAC_antisens_rep3 = rep(0,10), 
+                                               score_CTATwithCTAC_antisense_rep3 = rep(0,10), 
                                                
-                                               score_CTAC_avecctat_antisens_rep3 = rep(0,10),
+                                               score_CTAC_withctat_antisense_rep3 = rep(0,10),
                                                
-                                               score_CTAC_avecttat_antisens_rep2 = rep(0,10),
+                                               score_CTAC_withttat_antisense_rep2 = rep(0,10),
                                                
-                                               score_TTACavecCTAC_antisens_rep2 = rep(0,10), 
+                                               score_TTACwithCTAC_antisense_rep2 = rep(0,10), 
                                                
-                                               score_CTAC_avecctat_sens_rep1 = rep(0,10), 
+                                               score_CTAC_withctat_sense_rep1 = rep(0,10), 
                                                
-                                               score_CTAT_avecCTAC_sens_rep1 = rep(0,10),
+                                               score_CTAT_withCTAC_sense_rep1 = rep(0,10),
                                                
-                                               stade = c(1:10),
+                                               stage = c(1:10),
                                                
-                                               row.names = c("stade 1","stade 2","stade 3",
-                                                             "stade 4","stade 5","stade 6",
-                                                             "stade 7","stade 8","stade 9",
-                                                             "stade 10"))
+                                               row.names = c("stage 1","stage 2","stage 3",
+                                                             "stage 4","stage 5","stage 6",
+                                                             "stage 7","stage 8","stage 9",
+                                                             "stage 10"))
 
 
 for ( i in c(1:10)){
   
-  score_occurence_data_combinaison[[i,1]] <- (CTAC_aveccaac_antisens[i,2] + 2*CTAC_aveccaac_antisens[i,3] + 3*CTAC_aveccaac_antisens[i,4])
+  score_occurrence_data_combination[[i,1]] <- (CTAC_withcaac_antisense[i,2] + 2*CTAC_withcaac_antisense[i,3] + 3*CTAC_withcaac_antisense[i,4])
   
-  score_occurence_data_combinaison[[i,2]] <- (CTAC_avecttac_antisens[i,2] + 2*CTAC_avecttac_antisens[i,3] + 3*CTAC_avecttac_antisens[i,4]) 
+  score_occurrence_data_combination[[i,2]] <- (CTAC_withttac_antisense[i,2] + 2*CTAC_withttac_antisense[i,3] + 3*CTAC_withttac_antisense[i,4]) 
   
-  score_occurence_data_combinaison[[i,3]] <- (CTAC_avecctat_antisens[i,2] + 2*CTAC_avecctat_antisens[i,3] + 3*CTAC_avecctat_antisens[i,4])
+  score_occurrence_data_combination[[i,3]] <- (CTAC_withctat_antisense[i,2] + 2*CTAC_withctat_antisense[i,3] + 3*CTAC_withctat_antisense[i,4])
   
-  score_occurence_data_combinaison[[i,4]] <- (TTACavecCTAC_antisens[i,2] + 2*TTACavecCTAC_antisens[i,3] + 3*TTACavecCTAC_antisens[i,4])
+  score_occurrence_data_combination[[i,4]] <- (TTACwithCTAC_antisense[i,2] + 2*TTACwithCTAC_antisense[i,3] + 3*TTACwithCTAC_antisense[i,4])
   
-  score_occurence_data_combinaison[[i,5]] <- (CTATavecCTAC_antisens[i,2] + 2*CTATavecCTAC_antisens[i,3] + 3*CTATavecCTAC_antisens[i,4])
+  score_occurrence_data_combination[[i,5]] <- (CTATwithCTAC_antisense[i,2] + 2*CTATwithCTAC_antisense[i,3] + 3*CTATwithCTAC_antisense[i,4])
   
-  score_occurence_data_combinaison[[i,6]] <- (CAACavecCTAC_antisens[i,2] + 2*CAACavecCTAC_antisens[i,3] + 3*CAACavecCTAC_antisens[i,4])
+  score_occurrence_data_combination[[i,6]] <- (CAACwithCTAC_antisense[i,2] + 2*CAACwithCTAC_antisense[i,3] + 3*CAACwithCTAC_antisense[i,4])
   
-  score_occurence_data_combinaison[[i,7]] <- (CTAC_avecctat_sens[i,2] + 2*CTAC_avecctat_sens[i,3] + 3*CTAC_avecctat_sens[i,4])
+  score_occurrence_data_combination[[i,7]] <- (CTAC_withctat_sense[i,2] + 2*CTAC_withctat_sense[i,3] + 3*CTAC_withctat_sense[i,4])
   
-  score_occurence_data_combinaison[[i,8]] <- (CTAT_avecCTAC_sens[i,2] + 2*CTAT_avecCTAC_sens[i,3] + 3*CTAT_avecCTAC_sens[i,4])
+  score_occurrence_data_combination[[i,8]] <- (CTAT_withCTAC_sense[i,2] + 2*CTAT_withCTAC_sense[i,3] + 3*CTAT_withCTAC_sense[i,4])
   
-  score_occurence_data_combinaison[[i,9]] <- (CTATavecCTAC_antisens_rep3[i,2] + 2*CTATavecCTAC_antisens_rep3[i,3] + 3*CTATavecCTAC_antisens_rep3[i,4])
+  score_occurrence_data_combination[[i,9]] <- (CTATwithCTAC_antisense_rep3[i,2] + 2*CTATwithCTAC_antisense_rep3[i,3] + 3*CTATwithCTAC_antisense_rep3[i,4])
   
-  score_occurence_data_combinaison[[i,10]] <- (CTAC_avecctat_antisens_rep3[i,2] + 2*CTAC_avecctat_antisens_rep3[i,3] + 3*CTAC_avecctat_antisens_rep3[i,4])
+  score_occurrence_data_combination[[i,10]] <- (CTAC_withctat_antisense_rep3[i,2] + 2*CTAC_withctat_antisense_rep3[i,3] + 3*CTAC_withctat_antisense_rep3[i,4])
   
-  score_occurence_data_combinaison[[i,11]] <- (CTAC_avecttac_antisens_rep2[i,2] + 2*CTAC_avecttac_antisens_rep2[i,3] + 3*CTAC_avecttac_antisens_rep2[i,4]) 
+  score_occurrence_data_combination[[i,11]] <- (CTAC_withttac_antisense_rep2[i,2] + 2*CTAC_withttac_antisense_rep2[i,3] + 3*CTAC_withttac_antisense_rep2[i,4]) 
   
-  score_occurence_data_combinaison[[i,12]] <- (TTACavecCTAC_antisens_rep2[i,2] + 2*TTACavecCTAC_antisens_rep2[i,3] + 3*TTACavecCTAC_antisens_rep2[i,4])
+  score_occurrence_data_combination[[i,12]] <- (TTACwithCTAC_antisense_rep2[i,2] + 2*TTACwithCTAC_antisense_rep2[i,3] + 3*TTACwithCTAC_antisense_rep2[i,4])
   
-  score_occurence_data_combinaison[[i,13]] <- (CTAC_avecctat_sens[i,2] + 2*CTAC_avecctat_sens[i,3] + 3*CTAC_avecctat_sens[i,4])
+  score_occurrence_data_combination[[i,13]] <- (CTAC_withctat_sense_rep1[i,2] + 2*CTAC_withctat_sense_rep1[i,3] + 3*CTAC_withctat_sense_rep1[i,4])
   
-  score_occurence_data_combinaison[[i,14]] <- (CTAT_avecCTAC_sens[i,2] + 2*CTAT_avecCTAC_sens[i,3] + 3*CTAT_avecCTAC_sens[i,4])
+  score_occurrence_data_combination[[i,14]] <- (CTAT_withCTAC_sense_rep1[i,2] + 2*CTAT_withCTAC_sense_rep1[i,3] + 3*CTAT_withCTAC_sense_rep1[i,4])
   
-  print(paste("Boucle",i,"fait"))
+  print(paste("Loop",i,"done"))
 }
 
-score_occurence_data_normaliser_combinaison <- score_occurence_data_combinaison
+score_occurrence_data_normalize_combination <- score_occurrence_data_combination
 
 for (i in c(1:10)){
   
-  score_occurence_data_normaliser_combinaison[[i,1]] <- score_occurence_data_normaliser_combinaison[i,1]/(sum(CTAC_aveccaac_antisens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,1]] <- score_occurrence_data_normalize_combination[i,1]/(sum(CTAC_withcaac_antisense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,2]] <- score_occurence_data_normaliser_combinaison[i,2]/(sum(CTAC_avecttac_antisens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,2]] <- score_occurrence_data_normalize_combination[i,2]/(sum(CTAC_withttac_antisense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,3]] <- score_occurence_data_normaliser_combinaison[i,3]/(sum(CTAC_avecctat_antisens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,3]] <- score_occurrence_data_normalize_combination[i,3]/(sum(CTAC_withctat_antisense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,4]] <- score_occurence_data_normaliser_combinaison[i,4]/(sum(TTACavecCTAC_antisens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,4]] <- score_occurrence_data_normalize_combination[i,4]/(sum(TTACwithCTAC_antisense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,5]] <- score_occurence_data_normaliser_combinaison[i,5]/(sum(CTATavecCTAC_antisens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,5]] <- score_occurrence_data_normalize_combination[i,5]/(sum(CTATwithCTAC_antisense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,6]] <- score_occurence_data_normaliser_combinaison[i,6]/(sum(CAACavecCTAC_antisens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,6]] <- score_occurrence_data_normalize_combination[i,6]/(sum(CAACwithCTAC_antisense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,7]] <- score_occurence_data_normaliser_combinaison[i,7]/(sum(CTAC_avecctat_sens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,7]] <- score_occurrence_data_normalize_combination[i,7]/(sum(CTAC_withctat_sense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,8]] <- score_occurence_data_normaliser_combinaison[i,8]/(sum(CTAT_avecCTAC_sens[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,8]] <- score_occurrence_data_normalize_combination[i,8]/(sum(CTAT_withCTAC_sense[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,9]] <- score_occurence_data_normaliser_combinaison[i,9]/(sum(CTATavecCTAC_antisens_rep3[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,9]] <- score_occurrence_data_normalize_combination[i,9]/(sum(CTATwithCTAC_antisense_rep3[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,10]] <- score_occurence_data_normaliser_combinaison[i,10]/(sum(CTAC_avecctat_antisens_rep3[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,10]] <- score_occurrence_data_normalize_combination[i,10]/(sum(CTAC_withctat_antisense_rep3[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,11]] <- score_occurence_data_normaliser_combinaison[i,11]/(sum(CTAC_avecttac_antisens_rep2[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,11]] <- score_occurrence_data_normalize_combination[i,11]/(sum(CTAC_withttac_antisense_rep2[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,12]] <- score_occurence_data_normaliser_combinaison[i,12]/(sum(TTACavecCTAC_antisens_rep2[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,12]] <- score_occurrence_data_normalize_combination[i,12]/(sum(TTACwithCTAC_antisense_rep2[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,13]] <- score_occurence_data_normaliser_combinaison[i,13]/(sum(CTAC_avecctat_sens_rep1[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,13]] <- score_occurrence_data_normalize_combination[i,13]/(sum(CTAC_withctat_sense_rep1[i,1:4]) +1)
   
-  score_occurence_data_normaliser_combinaison[[i,14]] <- score_occurence_data_normaliser_combinaison[i,14]/(sum(CTAT_avecCTAC_sens_rep1[i,1:4]) +1)
+  score_occurrence_data_normalize_combination[[i,14]] <- score_occurrence_data_normalize_combination[i,14]/(sum(CTAT_withCTAC_sense_rep1[i,1:4]) +1)
   
 }
 
 #############################
-#compilationde tout les CTAC
-#CTAT sens et antisens
+#compilation of all CTAC
+#CTAT sense and antisense
 ############################
 
-CTAC_antisens_compiler <- data.frame(Null = rep(0,10),
+CTAC_antisense_compile <- data.frame(Null = rep(0,10),
                                      
-                                     Faible = rep(0,10),
+                                     Low = rep(0,10),
                                      
-                                     Moyen  = rep(0,10),
+                                     Medium  = rep(0,10),
                                      
-                                     Élever = rep(0,10), 
+                                     High = rep(0,10), 
                                      
-                                     row.names = c("stade 1","stade 2","stade 3",
-                                                   "stade 4","stade 5","stade 6",
-                                                   "stade 7","stade 8","stade 9",
-                                                   "stade 10"))
+                                     row.names = c("stage 1","stage 2","stage 3",
+                                                   "stage 4","stage 5","stage 6",
+                                                   "stage 7","stage 8","stage 9",
+                                                   "stage 10"))
 
-CTAT_antisens_compiler <- data.frame(Null = rep(0,10),
+CTAT_antisense_compile <- data.frame(Null = rep(0,10),
                                      
-                                     Faible = rep(0,10),
+                                     Low = rep(0,10),
                                      
-                                     Moyen  = rep(0,10),
+                                     Medium  = rep(0,10),
                                      
-                                     Élever = rep(0,10), 
+                                     High = rep(0,10), 
                                      
-                                     row.names = c("stade 1","stade 2","stade 3",
-                                                   "stade 4","stade 5","stade 6",
-                                                   "stade 7","stade 8","stade 9",
-                                                   "stade 10"))
+                                     row.names = c("stage 1","stage 2","stage 3",
+                                                   "stage 4","stage 5","stage 6",
+                                                   "stage 7","stage 8","stage 9",
+                                                   "stage 10"))
 
-CTAC_sens_compiler <- data.frame(Null = rep(0,10),
+CTAC_sense_compile <- data.frame(Null = rep(0,10),
                                  
-                                 Faible = rep(0,10),
+                                 Low = rep(0,10),
                                  
-                                 Moyen  = rep(0,10),
+                                 Medium  = rep(0,10),
                                  
-                                 Élever = rep(0,10), 
+                                 High = rep(0,10), 
                                  
-                                 row.names = c("stade 1","stade 2","stade 3",
-                                               "stade 4","stade 5","stade 6",
-                                               "stade 7","stade 8","stade 9",
-                                               "stade 10"))
+                                 row.names = c("stage 1","stage 2","stage 3",
+                                               "stage 4","stage 5","stage 6",
+                                               "stage 7","stage 8","stage 9",
+                                               "stage 10"))
 
-CTAT_sens_compiler <- data.frame(Null = rep(0,10),
+CTAT_sense_compile <- data.frame(Null = rep(0,10),
                                  
-                                 Faible = rep(0,10),
+                                 Low = rep(0,10),
                                  
-                                 Moyen  = rep(0,10),
+                                 Medium  = rep(0,10),
                                  
-                                 Élever = rep(0,10), 
+                                 High = rep(0,10), 
                                  
-                                 row.names = c("stade 1","stade 2","stade 3",
-                                               "stade 4","stade 5","stade 6",
-                                               "stade 7","stade 8","stade 9",
-                                               "stade 10"))
+                                 row.names = c("stage 1","stage 2","stage 3",
+                                               "stage 4","stage 5","stage 6",
+                                               "stage 7","stage 8","stage 9",
+                                               "stage 10"))
 
-score_occurence_data_CTAC_antisens_compiler <- data.frame(Score_CTAC_antisens_compiler = rep(0,10), 
+score_occurrence_data_CTAC_antisense_compile <- data.frame(Score_CTAC_antisense_compile = rep(0,10), 
                                                           
-                                                          stade = c(1:10),
+                                                          stage = c(1:10),
                                                           
-                                                          row.names = c("stade 1","stade 2","stade 3",
-                                                                        "stade 4","stade 5","stade 6",
-                                                                        "stade 7","stade 8","stade 9",
-                                                                        "stade 10"))
+                                                          row.names = c("stage 1","stage 2","stage 3",
+                                                                        "stage 4","stage 5","stage 6",
+                                                                        "stage 7","stage 8","stage 9",
+                                                                        "stage 10"))
 
-score_occurence_data_CTAT_antisens_compiler <- data.frame(Score_CTAT_antisens_compiler = rep(0,10), 
+score_occurrence_data_CTAT_antisense_compile <- data.frame(Score_CTAT_antisense_compile = rep(0,10), 
                                                           
-                                                          stade = c(1:10),
+                                                          stage = c(1:10),
                                                           
-                                                          row.names = c("stade 1","stade 2","stade 3",
-                                                                        "stade 4","stade 5","stade 6",
-                                                                        "stade 7","stade 8","stade 9",
-                                                                        "stade 10"))
+                                                          row.names = c("stage 1","stage 2","stage 3",
+                                                                        "stage 4","stage 5","stage 6",
+                                                                        "stage 7","stage 8","stage 9",
+                                                                        "stage 10"))
 
-score_occurence_data_CTAT_sens_compiler <- data.frame(Score_CTAT_sens_compiler = rep(0,10), 
+score_occurrence_data_CTAT_sense_compile <- data.frame(Score_CTAT_sense_compile = rep(0,10), 
                                                       
-                                                      stade = c(1:10),
+                                                      stage = c(1:10),
                                                       
-                                                      row.names = c("stade 1","stade 2","stade 3",
-                                                                    "stade 4","stade 5","stade 6",
-                                                                    "stade 7","stade 8","stade 9",
-                                                                    "stade 10"))
+                                                      row.names = c("stage 1","stage 2","stage 3",
+                                                                    "stage 4","stage 5","stage 6",
+                                                                    "stage 7","stage 8","stage 9",
+                                                                    "stage 10"))
 
-score_occurence_data_CTAC_sens_compiler <- data.frame(Score_CTAC_sens_compiler = rep(0,10), 
+score_occurrence_data_CTAC_sense_compile <- data.frame(Score_CTAC_sense_compile = rep(0,10), 
                                                       
-                                                      stade = c(1:10),
+                                                      stage = c(1:10),
                                                       
-                                                      row.names = c("stade 1","stade 2","stade 3",
-                                                                    "stade 4","stade 5","stade 6",
-                                                                    "stade 7","stade 8","stade 9",
-                                                                    "stade 10"))
+                                                      row.names = c("stage 1","stage 2","stage 3",
+                                                                    "stage 4","stage 5","stage 6",
+                                                                    "stage 7","stage 8","stage 9",
+                                                                    "stage 10"))
 
 for (i in c(1:4)) {
   for (j in c(1:10)) {
     
-    CTAC_antisens_compiler[[j,i]] <- mean(c(CTAC_aveccaac_antisens[j,i], CTAC_avecctat_antisens[j,i], 
-                                         CTAC_avecttac_antisens[j,i],CTAC_avecctat_antisens_rep3[j,i], 
-                                         CTAC_avecttac_antisens_rep2[j,i]))
+    CTAC_antisense_compile[[j,i]] <- mean(c(CTAC_withcaac_antisense[j,i], CTAC_withctat_antisense[j,i], 
+                                         CTAC_withttac_antisense[j,i],CTAC_withctat_antisense_rep3[j,i], 
+                                         CTAC_withttac_antisense_rep2[j,i]))
     
-    CTAT_antisens_compiler[[j,i]] <- mean(c(CTATavecCTAC_antisens[j,i], CTATavecCTAC_antisens_rep3[j,i]))
+    CTAT_antisense_compile[[j,i]] <- mean(c(CTATwithCTAC_antisense[j,i], CTATwithCTAC_antisense_rep3[j,i]))
     
-    CTAC_sens_compiler[[j,i]] <- mean(c(CTAC_avecctat_sens[j,i], CTAC_avecctat_sens_rep1[j,i]))
+    CTAC_sense_compile[[j,i]] <- mean(c(CTAC_withctat_sense[j,i], CTAC_withctat_sense_rep1[j,i]))
     
-    CTAT_sens_compiler[[j,i]] <- mean(c(CTAT_avecCTAC_sens[j,i], CTAT_avecCTAC_sens_rep1[j,i]))
+    CTAT_sense_compile[[j,i]] <- mean(c(CTAT_withCTAC_sense[j,i], CTAT_withCTAC_sense_rep1[j,i]))
     
   }
 }
 
 for (i in c(1:10)){
   
-  score_occurence_data_CTAC_antisens_compiler[[i,1]] <- (CTAC_antisens_compiler[i,2] + 2*CTAC_antisens_compiler[i,3] + 3*CTAC_antisens_compiler[i,4])
+  score_occurrence_data_CTAC_antisense_compile[[i,1]] <- (CTAC_antisense_compile[i,2] + 2*CTAC_antisense_compile[i,3] + 3*CTAC_antisense_compile[i,4])
   
-  score_occurence_data_CTAT_antisens_compiler[[i,1]] <- (CTAT_antisens_compiler[i,2] + 2*CTAT_antisens_compiler[i,3] + 3*CTAT_antisens_compiler[i,4])
+  score_occurrence_data_CTAT_antisense_compile[[i,1]] <- (CTAT_antisense_compile[i,2] + 2*CTAT_antisense_compile[i,3] + 3*CTAT_antisense_compile[i,4])
   
-  score_occurence_data_CTAC_sens_compiler[[i,1]] <- (CTAC_sens_compiler[i,2] + 2*CTAC_sens_compiler[i,3] + 3*CTAC_sens_compiler[i,4])
+  score_occurrence_data_CTAC_sense_compile[[i,1]] <- (CTAC_sense_compile[i,2] + 2*CTAC_sense_compile[i,3] + 3*CTAC_sense_compile[i,4])
   
-  score_occurence_data_CTAT_sens_compiler[[i,1]] <- (CTAT_sens_compiler[i,2] + 2*CTAT_sens_compiler[i,3] + 3*CTAT_sens_compiler[i,4])
+  score_occurrence_data_CTAT_sense_compile[[i,1]] <- (CTAT_sense_compile[i,2] + 2*CTAT_sense_compile[i,3] + 3*CTAT_sense_compile[i,4])
   
 }
 
-score_occurence_data_CTAC_antisens_compiler_normaliser <- score_occurence_data_CTAC_antisens_compiler
+score_occurrence_data_CTAC_antisense_compile_normalize <- score_occurrence_data_CTAC_antisense_compile
 
-score_occurence_data_CTAT_antisens_compiler_normaliser <- score_occurence_data_CTAT_antisens_compiler
+score_occurrence_data_CTAT_antisense_compile_normalize <- score_occurrence_data_CTAT_antisense_compile
 
-score_occurence_data_CTAC_sens_compiler_normaliser <- score_occurence_data_CTAC_sens_compiler
+score_occurrence_data_CTAC_sense_compile_normalize <- score_occurrence_data_CTAC_sense_compile
 
-score_occurence_data_CTAT_sens_compiler_normaliser <- score_occurence_data_CTAT_sens_compiler
+score_occurrence_data_CTAT_sense_compile_normalize <- score_occurrence_data_CTAT_sense_compile
 
 for (i in c(1:10)) {
   
-  score_occurence_data_CTAC_antisens_compiler_normaliser[[i,1]] <- score_occurence_data_CTAC_antisens_compiler_normaliser[i,1]/(sum(CTAC_antisens_compiler[i,1:4]) +1)
+  score_occurrence_data_CTAC_antisense_compile_normalize[[i,1]] <- score_occurrence_data_CTAC_antisense_compile_normalize[i,1]/(sum(CTAC_antisense_compile[i,1:4]) +1)
   
-  score_occurence_data_CTAT_antisens_compiler_normaliser[[i,1]] <- score_occurence_data_CTAT_antisens_compiler_normaliser[i,1]/(sum(CTAT_antisens_compiler[i,1:4]) +1)
+  score_occurrence_data_CTAT_antisense_compile_normalize[[i,1]] <- score_occurrence_data_CTAT_antisense_compile_normalize[i,1]/(sum(CTAT_antisense_compile[i,1:4]) +1)
   
-  score_occurence_data_CTAC_sens_compiler_normaliser[[i,1]] <- score_occurence_data_CTAC_sens_compiler_normaliser[i,1]/(sum(CTAC_sens_compiler[i,1:4]) +1)
+  score_occurrence_data_CTAC_sense_compile_normalize[[i,1]] <- score_occurrence_data_CTAC_sense_compile_normalize[i,1]/(sum(CTAC_sense_compile[i,1:4]) +1)
   
-  score_occurence_data_CTAT_sens_compiler_normaliser[[i,1]] <- score_occurence_data_CTAT_sens_compiler_normaliser[i,1]/(sum(CTAT_sens_compiler[i,1:4]) +1)
+  score_occurrence_data_CTAT_sense_compile_normalize[[i,1]] <- score_occurrence_data_CTAT_sense_compile_normalize[i,1]/(sum(CTAT_sense_compile[i,1:4]) +1)
   
 }
 
 
-CTAC_sens_compiler_moyenne <- data.frame(moyenne = rep(0,10),
+CTAC_sense_compile_mean <- data.frame(mean = rep(0,10),
                                       
                                       SD = rep(0,10),
                                  
-                                      stade = c(1:10),
+                                      stage = c(1:10),
                                  
-                                      row.names = c("stade 1","stade 2","stade 3",
-                                               "stade 4","stade 5","stade 6",
-                                               "stade 7","stade 8","stade 9",
-                                               "stade 10"))
+                                      row.names = c("stage 1","stage 2","stage 3",
+                                               "stage 4","stage 5","stage 6",
+                                               "stage 7","stage 8","stage 9",
+                                               "stage 10"))
 
-CTAT_sens_compiler_moyenne <- data.frame(moyenne = rep(0,10),
+CTAT_sense_compile_mean <- data.frame(mean = rep(0,10),
                                       
                                       SD = rep(0,10),
                                       
-                                      stade = c(1:10),
+                                      stage = c(1:10),
                                       
-                                      row.names = c("stade 1","stade 2","stade 3",
-                                                    "stade 4","stade 5","stade 6",
-                                                    "stade 7","stade 8","stade 9",
-                                                    "stade 10"))
+                                      row.names = c("stage 1","stage 2","stage 3",
+                                                    "stage 4","stage 5","stage 6",
+                                                    "stage 7","stage 8","stage 9",
+                                                    "stage 10"))
 
-CTAT_antisens_compiler_moyenne <- data.frame(moyenne = rep(0,10),
+CTAT_antisense_compile_mean <- data.frame(mean = rep(0,10),
                                           
                                           SD = rep(0,10),
                                       
-                                          stade = c(1:10),
+                                          stage = c(1:10),
                                       
-                                          row.names = c("stade 1","stade 2","stade 3",
-                                                    "stade 4","stade 5","stade 6",
-                                                    "stade 7","stade 8","stade 9",
-                                                    "stade 10"))
+                                          row.names = c("stage 1","stage 2","stage 3",
+                                                    "stage 4","stage 5","stage 6",
+                                                    "stage 7","stage 8","stage 9",
+                                                    "stage 10"))
 
-CTAC_antisens_compiler_moyenne <- data.frame(moyenne = rep(0,10),
+CTAC_antisense_compile_mean <- data.frame(mean = rep(0,10),
                                           
                                           SD = rep(0,10),
                                           
-                                          stade = c(1:10),
+                                          stage = c(1:10),
                                           
-                                          row.names = c("stade 1","stade 2","stade 3",
-                                                        "stade 4","stade 5","stade 6",
-                                                        "stade 7","stade 8","stade 9",
-                                                        "stade 10"))
+                                          row.names = c("stage 1","stage 2","stage 3",
+                                                        "stage 4","stage 5","stage 6",
+                                                        "stage 7","stage 8","stage 9",
+                                                        "stage 10"))
 
 
 
 for (j in c(1:10)) {
     
-    CTAC_sens_compiler_moyenne[[j,1]] <- mean(c(score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_sens[j], 
-                                             score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_sens_rep1[j]))
+    CTAC_sense_compile_mean[[j,1]] <- mean(c(score_occurrence_data_normalize_combination$score_CTAC_withctat_sense[j], 
+                                             score_occurrence_data_normalize_combination$score_CTAC_withctat_sense_rep1[j]))
     
-    CTAC_sens_compiler_moyenne[[j,2]] <- sd(c(score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_sens[j], 
-                                             score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_sens_rep1[j]))
+    CTAC_sense_compile_mean[[j,2]] <- sd(c(score_occurrence_data_normalize_combination$score_CTAC_withctat_sense[j], 
+                                             score_occurrence_data_normalize_combination$score_CTAC_withctat_sense_rep1[j]))
     
-    CTAT_sens_compiler_moyenne[[j,1]] <- mean(c(score_occurence_data_normaliser_combinaison$score_CTAT_avecCTAC_sens[j], 
-                                             score_occurence_data_normaliser_combinaison$score_CTAT_avecCTAC_sens_rep1[j]))
+    CTAT_sense_compile_mean[[j,1]] <- mean(c(score_occurrence_data_normalize_combination$score_CTAT_withCTAC_sense[j], 
+                                             score_occurrence_data_normalize_combination$score_CTAT_withCTAC_sense_rep1[j]))
     
-    CTAT_sens_compiler_moyenne[[j,2]] <- sd(c(score_occurence_data_normaliser_combinaison$score_CTAT_avecCTAC_sens[j], 
-                                             score_occurence_data_normaliser_combinaison$score_CTAT_avecCTAC_sens_rep1[j]))
+    CTAT_sense_compile_mean[[j,2]] <- sd(c(score_occurrence_data_normalize_combination$score_CTAT_withCTAC_sense[j], 
+                                             score_occurrence_data_normalize_combination$score_CTAT_withCTAC_sense_rep1[j]))
     
-    CTAT_antisens_compiler_moyenne[[j,1]] <- mean(c(score_occurence_data_normaliser_combinaison$score_CTATavecCTAC_antisens[j], 
-                                             score_occurence_data_normaliser_combinaison$score_CTATavecCTAC_antisens_rep3[j]))
+    CTAT_antisense_compile_mean[[j,1]] <- mean(c(score_occurrence_data_normalize_combination$score_CTATwithCTAC_antisense[j], 
+                                             score_occurrence_data_normalize_combination$score_CTATwithCTAC_antisense_rep3[j]))
     
-    CTAT_antisens_compiler_moyenne[[j,2]] <- sd(c(score_occurence_data_normaliser_combinaison$score_CTATavecCTAC_antisens[j], 
-                                                 score_occurence_data_normaliser_combinaison$score_CTATavecCTAC_antisens_rep3[j]))
+    CTAT_antisense_compile_mean[[j,2]] <- sd(c(score_occurrence_data_normalize_combination$score_CTATwithCTAC_antisense[j], 
+                                                 score_occurrence_data_normalize_combination$score_CTATwithCTAC_antisense_rep3[j]))
     
-    CTAC_antisens_compiler_moyenne[[j,1]] <- mean(c(score_occurence_data_normaliser_combinaison$score_CTAC_aveccaac_antisens[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecttac_antisens[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_antisens[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_antisens_rep3[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecttat_antisens_rep2[j]))
+    CTAC_antisense_compile_mean[[j,1]] <- mean(c(score_occurrence_data_normalize_combination$score_CTAC_withcaac_antisense[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withttac_antisense[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withctat_antisense[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withctat_antisense_rep3[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withttat_antisense_rep2[j]))
     
-    CTAC_antisens_compiler_moyenne[[j,2]] <- sd(c(score_occurence_data_normaliser_combinaison$score_CTAC_aveccaac_antisens[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecttac_antisens[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_antisens[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecctat_antisens_rep3[j],
-                                                 score_occurence_data_normaliser_combinaison$score_CTAC_avecttat_antisens_rep2[j]))
+    CTAC_antisense_compile_mean[[j,2]] <- sd(c(score_occurrence_data_normalize_combination$score_CTAC_withcaac_antisense[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withttac_antisense[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withctat_antisense[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withctat_antisense_rep3[j],
+                                                 score_occurrence_data_normalize_combination$score_CTAC_withttat_antisense_rep2[j]))
     
     
 }
@@ -521,87 +508,87 @@ for (j in c(1:10)) {
 
 
 ########################
-#Graphique avec GGplot
+#Graphic with GGplot
 ######################
 
 
-transparence = 0.2
+transparency = 0.2
 
-taile_ligne = 0.8
+line_size = 0.8
 
 
 windowsFonts( A = windowsFont("Arial"))
 
-graph <- ggplot(score_occurence_data_normaliser_combinaison,
-                aes(x = stade)) +
+graph <- ggplot(score_occurrence_data_normalize_combination,
+                aes(x = stage)) +
   
-  #ligne des CTAC
+  #CTAC lines
   
-  geom_line(aes(y = score_CTAC_aveccaac_antisens,
-                color = "Forward AAACTAC"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTAC_withcaac_antisense,
+                color = "Forward AAACTAC"), size = line_size, alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTAC_avecttac_antisens,
-                color = "Forward AAACTAC"), size = taile_ligne,alpha = transparence,
+  geom_line(aes(y = score_CTAC_withttac_antisense,
+                color = "Forward AAACTAC"), size = line_size,alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTAC_avecttat_antisens_rep2,
-                color = "Forward AAACTAC"), size = taile_ligne,alpha = transparence,
+  geom_line(aes(y = score_CTAC_withttat_antisense_rep2,
+                color = "Forward AAACTAC"), size = line_size,alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTAC_avecctat_antisens,
-                color = "Forward AAACTAC"), size = taile_ligne,alpha = transparence,
+  geom_line(aes(y = score_CTAC_withctat_antisense,
+                color = "Forward AAACTAC"), size = line_size,alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTAC_avecctat_antisens_rep3,
-                color = "Forward AAACTAC"), size = taile_ligne,alpha = transparence,
+  geom_line(aes(y = score_CTAC_withctat_antisense_rep3,
+                color = "Forward AAACTAC"), size = line_size,alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTAC_avecctat_sens,
-                color = "Reverse AAACTAC"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTAC_withctat_sense,
+                color = "Reverse AAACTAC"), size = line_size, alpha = transparency,
             linetype = "dotdash") +
   
-  geom_line(aes(y = score_CTAC_avecctat_sens_rep1,
-                color = "Reverse AAACTAC"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTAC_withctat_sense_rep1,
+                color = "Reverse AAACTAC"), size = line_size, alpha = transparency,
             linetype = "dotdash") +
   
-  #ligne des CTAT
+  #CTAT lines
   
-  geom_line(aes(y = score_CTATavecCTAC_antisens,
-                color = "Forward AAACTAT"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTATwithCTAC_antisense,
+                color = "Forward AAACTAT"), size = line_size, alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTATavecCTAC_antisens_rep3,
-                color = "Forward AAACTAT"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTATwithCTAC_antisense_rep3,
+                color = "Forward AAACTAT"), size = line_size, alpha = transparency,
             linetype = "solid") +
   
-  geom_line(aes(y = score_CTAT_avecCTAC_sens,
-                color = "Reverse AAACTAT"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTAT_withCTAC_sense,
+                color = "Reverse AAACTAT"), size = line_size, alpha = transparency,
             linetype = "dotdash") +
   
-  geom_line(aes(y = score_CTAT_avecCTAC_sens_rep1,
-                color = "Reverse AAACTAT"), size = taile_ligne, alpha = transparence,
+  geom_line(aes(y = score_CTAT_withCTAC_sense_rep1,
+                color = "Reverse AAACTAT"), size = line_size, alpha = transparency,
             linetype = "dotdash") +
   
-  #Ligne des compilation
+  #Compilation lines
   
-  geom_line(data = CTAC_antisens_compiler_moyenne,
-            aes(y = moyenne,
+  geom_line(data = CTAC_antisense_compile_mean,
+            aes(y = mean,
                 color = "Compilation foward AAACTAC"),
             linetype = "solid", size = 1.5) +
   
-  geom_line(data = CTAT_antisens_compiler_moyenne,
-            aes(y = moyenne,
+  geom_line(data = CTAT_antisense_compile_mean,
+            aes(y = mean,
                 color = "Compilation foward AAACTAT"),
             linetype = "solid", size = 1.5) +
   
-  geom_line(data = CTAC_sens_compiler_moyenne,
-            aes(y = moyenne,
+  geom_line(data = CTAC_sense_compile_mean,
+            aes(y = mean,
                 color = "Compilation reverse AAACTAC"),
             linetype = "dotdash", size = 1.5) +
   
-  geom_line(data = CTAT_sens_compiler_moyenne,
-            aes(y = moyenne,
+  geom_line(data = CTAT_sense_compile_mean,
+            aes(y = mean,
                 color = "Compilation reverse AAACTAT"),
             linetype = "dotdash", size = 1.5) +
   
@@ -648,24 +635,24 @@ print(graph)
 
 
 #################################
-graph_personalisable <- ggplot(score_occurence_data_normaliser_combinaison,
-                               aes(x = stade)) +
+graph_personalisable <- ggplot(score_occurrence_data_normalize_combination,
+                               aes(x = stage)) +
   
-  geom_line(aes(y = score_CTAC_avecctat_sens,
+  geom_line(aes(y = score_CTAC_withctat_sense,
                 color = "Reverse AAACTAC"), size = 0.75,
             linetype = "dotdash") +
   
-  geom_line(aes(y = score_CTAT_avecCTAC_sens,
+  geom_line(aes(y = score_CTAT_withCTAC_sense,
                 color = "Reverse AAACTAT"), size = 0.75,
             linetype = "dotdash") +
   
-  geom_line(data = score_occurence_data_CTAC_antisens_compiler_normaliser,
-            aes(y = Score_CTAC_antisens_compiler,
+  geom_line(data = score_occurrence_data_CTAC_antisense_compile_normalize,
+            aes(y = Score_CTAC_antisense_compile,
                 color = "Compilation AAACTAC"),
             linetype = "solid", size = 1.3) +
   
-  geom_line(data = score_occurence_data_CTAT_antisens_compiler_normaliser,
-            aes(y = Score_CTAT_antisens_compiler,
+  geom_line(data = score_occurrence_data_CTAT_antisense_compile_normalize,
+            aes(y = Score_CTAT_antisense_compile,
                 color = "Compilation AAACTAT"),
             linetype = "solid", size = 1.3) +
   
@@ -707,240 +694,240 @@ print(graph_personalisable)
 
 
 ############################################
-#Exploration data
+#Data exploration
 ###########################################
 
 par(mfrow=c(4,2), oma = c(0, 0, 3, 0))
 
 for ( i in c(3:10)){
   
-    plot(CTAC_aveccaac_antisens[i,],
-         xlab= " null = 1, faible = 2, moyen = 3, élever = 4",
-         ylab = "occurence des cathégorie",
+    plot(CTAC_withcaac_antisense[i,],
+         xlab= " null = 1, low = 2, medium = 3, high = 4",
+         ylab = "category occurrence",
          pch = 19,
          type = "o",
-         main = paste0("Stade",i))
+         main = paste0("Stage",i))
   
-  tot <- sum(CTAC_aveccaac_antisens[i,])
+  tot <- sum(CTAC_withcaac_antisense[i,])
   
-  text( x = 2.5, y = (0.75*max(CTAC_aveccaac_antisens[i,])), label = paste0("N = ", tot))
+  text( x = 2.5, y = (0.75*max(CTAC_withcaac_antisense[i,])), label = paste0("N = ", tot))
   
 }
 
-mtext("CTAC_aveccaac_antisens nombre d'obersvation", outer = TRUE, cex = 1.5, font = 2)
+mtext("CTAC_withcaac_antisense number of observations", outer = TRUE, cex = 1.5, font = 2)
 
 par(mfrow=c(4,2), oma = c(0, 0, 3, 0))
 
 for ( i in c(3:10)){
   
-  plot(CTAC_avecctat_antisens_rep3[i,],
-       xlab= " null = 1, faible = 2, moyen = 3, élever = 4",
-       ylab = "occurence des cathégorie",
+  plot(CTAC_withctat_antisense_rep3[i,],
+       xlab= " null = 1, low = 2, medium = 3, high = 4",
+       ylab = "category occurrence",
        pch = 19,
        type = "o",
-       main = paste0("Stade",i))
+       main = paste0("Stage",i))
   
-  tot <- sum(CTAC_avecctat_antisens_rep3[i,])
+  tot <- sum(CTAC_withctat_antisense_rep3[i,])
   
-  text( x = 2.5, y = (0.75*max(CTAC_avecctat_antisens_rep3[i,])), label = paste0("N = ", tot))
+  text( x = 2.5, y = (0.75*max(CTAC_withctat_antisense_rep3[i,])), label = paste0("N = ", tot))
   
 }
 
-mtext("CTAC_avecctat_antisens_rep3 nombre d'obersvation", outer = TRUE, cex = 1.5, font = 2)
+mtext("CTAC_withctat_antisense_rep3 number of observations", outer = TRUE, cex = 1.5, font = 2)
 
 par(mfrow=c(4,2), oma = c(0, 0, 3, 0))
 
 for ( i in c(3:10)){
   
-  plot(CTAC_avecctat_antisens[i,],
-       xlab= " null = 1, faible = 2, moyen = 3, élever = 4",
-       ylab = "occurence des cathégorie",
+  plot(CTAC_withctat_antisense[i,],
+       xlab= " null = 1, low = 2, medium = 3, high = 4",
+       ylab = "category occurrence",
        pch = 19,
        type = "o",
-       main = paste0("Stade",i))
+       main = paste0("Stage",i))
   
-  tot <- sum(CTAC_avecctat_antisens[i,])
+  tot <- sum(CTAC_withctat_antisense[i,])
   
-  text( x = 2.5, y = (0.75*max(CTAC_avecctat_antisens[i,])), label = paste0("N = ", tot))
+  text( x = 2.5, y = (0.75*max(CTAC_withctat_antisense[i,])), label = paste0("N = ", tot))
   
 }
 
-mtext("CTAC_avecctat_antisens nombre d'obersvation", outer = TRUE, cex = 1.5, font = 2)
+mtext("CTAC_withctat_antisense number of observations", outer = TRUE, cex = 1.5, font = 2)
 
 #GLM distribution Gamma test
 
-#confection des data_frame mutate de sens et antisens CTAC et CTAT
+#creation of data_frame mutate of sense and antisense CTAC and CTAT
 
-score_CTAC_antisens <- score_occurence_data_normaliser_combinaison[,c(1,2,3,10,11,15)] %>%
+score_CTAC_antisense <- score_occurrence_data_normalize_combination[,c(1,2,3,10,11,15)] %>%
   pivot_longer(
-    cols = !stade,
-    names_to = "brin",
+    cols = !stage,
+    names_to = "strand",
     values_to = "score"
   )
 
-score_CTAC_sens <- score_occurence_data_normaliser_combinaison[,c(7,13,15)] %>%
+score_CTAC_sense <- score_occurrence_data_normalize_combination[,c(7,13,15)] %>%
   pivot_longer(
-    cols = !stade,
-    names_to = "brin",
+    cols = !stage,
+    names_to = "strand",
     values_to = "score"
   )
 
-score_CTAT_antisens <- score_occurence_data_normaliser_combinaison[,c(5,9,15)] %>%
+score_CTAT_antisense <- score_occurrence_data_normalize_combination[,c(5,9,15)] %>%
   pivot_longer(
-    cols = !stade,
-    names_to = "brin",
+    cols = !stage,
+    names_to = "strand",
     values_to = "score"
   )
 
-score_CTAT_sens <- score_occurence_data_normaliser_combinaison[,c(8,14,15)] %>%
+score_CTAT_sense <- score_occurrence_data_normalize_combination[,c(8,14,15)] %>%
   pivot_longer(
-    cols = !stade,
-    names_to = "brin",
+    cols = !stage,
+    names_to = "strand",
     values_to = "score"
   )
 
-hist(score_CTAC_antisens$score)
-hist(score_CTAC_sens$score)
-hist(score_CTAT_antisens$score)
-hist(score_CTAT_sens$score)
+hist(score_CTAC_antisense$score)
+hist(score_CTAC_sense$score)
+hist(score_CTAT_antisense$score)
+hist(score_CTAT_sense$score)
 
-boxplot(score_CTAC_antisens$score ~ score_CTAC_antisens$stade)
-boxplot(score_CTAC_sens$score ~ score_CTAC_sens$stade)
-boxplot(score_CTAT_antisens$score ~ score_CTAT_antisens$stade)
-boxplot(score_CTAT_sens$score ~ score_CTAT_sens$stade)
+boxplot(score_CTAC_antisense$score ~ score_CTAC_antisense$stage)
+boxplot(score_CTAC_sense$score ~ score_CTAC_sense$stage)
+boxplot(score_CTAT_antisense$score ~ score_CTAT_antisense$stage)
+boxplot(score_CTAT_sense$score ~ score_CTAT_sense$stage)
 
-concatene <- qpcR:::cbind.na(score_CTAC_antisens[,3],score_CTAC_sens[,3],
-                              score_CTAT_antisens[,3],score_CTAT_sens[,3])
+concatenated <- qpcR:::cbind.na(score_CTAC_antisense[,3],score_CTAC_sense[,3],
+                              score_CTAT_antisense[,3],score_CTAT_sense[,3])
 
-pairs.panels(concatene)
-
-
-
-model_CTAC_antisens <- lm(data = score_CTAC_antisens, score ~ stade)
-model_CTAC_sens <- lm(data = score_CTAC_sens, score ~ stade)
-model_CTAT_antisens <- lm(data = score_CTAT_antisens, score ~ stade)
-model_CTAT_sens <- lm(data = score_CTAT_sens, score ~ stade)
+pairs.panels(concatenated)
 
 
-gvlma(model_CTAC_antisens)
-check_model(model_CTAC_antisens)
 
-gvlma(model_CTAC_sens)
-check_model(model_CTAC_sens)
-
-
-gvlma(model_CTAT_antisens)
-check_model(model_CTAT_antisens)
+model_CTAC_antisense <- lm(data = score_CTAC_antisense, score ~ stage)
+model_CTAC_sense <- lm(data = score_CTAC_sense, score ~ stage)
+model_CTAT_antisense <- lm(data = score_CTAT_antisense, score ~ stage)
+model_CTAT_sense <- lm(data = score_CTAT_sense, score ~ stage)
 
 
-gvlma(model_CTAT_sens)
-check_model(model_CTAT_sens)
+gvlma(model_CTAC_antisense)
+check_model(model_CTAC_antisense)
+
+gvlma(model_CTAC_sense)
+check_model(model_CTAC_sense)
 
 
-#vérification de modele gam ainsi que de leurs condition application
+gvlma(model_CTAT_antisense)
+check_model(model_CTAT_antisense)
+
+
+gvlma(model_CTAT_sense)
+check_model(model_CTAT_sense)
+
+
+#verification of gam model as well as their application conditions
 #####################################
-#Faire test de comparaions des courbes
+#Curve comparison test
 
-score_CTAC_antisens$brin <- "CTAC_antisens" 
+score_CTAC_antisense$strand <- "CTAC_antisense" 
 
-score_CTAC_sens$brin <- "CTAC_sens" 
+score_CTAC_sense$strand <- "CTAC_sense" 
 
-score_CTAT_antisens$brin <- "CTAT_antisens" 
+score_CTAT_antisense$strand <- "CTAT_antisense" 
 
-score_CTAT_sens$brin <- "CTAT_sens" 
+score_CTAT_sense$strand <- "CTAT_sense" 
 
-data_combier <- rbind(score_CTAC_antisens, score_CTAC_sens,score_CTAT_antisens,score_CTAT_sens)
+combined_data <- rbind(score_CTAC_antisense, score_CTAC_sense,score_CTAT_antisense,score_CTAT_sense)
 
-#exportation des donner
+#data export
 
-data_combier$brin <- as.factor(data_combier$brin)
+combined_data$strand <- as.factor(combined_data$strand)
 
-modele_combiné_tw <- gam(score ~ brin + s(stade, by = as.factor(brin), bs = "cr", k = 10), 
-                      data = data_combier, 
+combined_model_tw <- gam(score ~ strand + s(stage, by = as.factor(strand), bs = "cr", k = 10), 
+                      data = combined_data, 
                       method = "REML", family = tw(link = "log"),control = list(
                         maxit = 1000))
 
-modele_combiné <- gam(list(score ~ brin + s(stade, by = brin, bs = "cr", k = 10), 
-                           ~ s(stade)), 
-                      data = data_combier,
+combined_model <- gam(list(score ~ strand + s(stage, by = strand, bs = "cr", k = 10), 
+                           ~ s(stage)), 
+                      data = combined_data,
                       optimizer = c("outer", "newton"),
                       method = "REML", 
                       family = gaulss(),
                       control = list(maxit = 1000)
 )
 
-summary(modele_combiné)
+summary(combined_model)
 par(mfrow=c(2,2))
-gam.check(modele_combiné)
-k.check(modele_combiné)
+gam.check(combined_model)
+k.check(combined_model)
 
-concurvity(modele_combiné, full = FALSE)
-
-
-model_performance(modele_combiné)
-plot(modele_combiné)
-
-anova <- anova.gam(modele_combiné)
+concurvity(combined_model, full = FALSE)
 
 
-stade_dense <- seq(min(data_combier$stade), 
-                   max(data_combier$stade), 
+model_performance(combined_model)
+plot(combined_model)
+
+anova <- anova.gam(combined_model)
+
+
+stage_dense <- seq(min(combined_data$stage), 
+                   max(combined_data$stage), 
                    length.out = 200)
 
 df_predict_combine <- expand.grid(
-  stade = stade_dense,
-  brin = unique(data_combier$brin) 
+  stage = stage_dense,
+  strand = unique(combined_data$strand) 
 )
 
-preds_smooth <- predict(modele_combiné, newdata = df_predict_combine, 
+preds_smooth <- predict(combined_model, newdata = df_predict_combine, 
                         se.fit = TRUE, type = "link")
 
-ilink <- family(modele_combiné)$linkinv
+ilink <- family(combined_model)$linkinv
 
 df_predict_combine <- df_predict_combine %>%
   mutate(
-    fit   = preds_smooth$fit[,1],  # Moyenne
+    fit   = preds_smooth$fit[,1],  # Mean
     upper = preds_smooth$fit[,1] + (1.96 * preds_smooth$se.fit[,1]),
     lower = preds_smooth$fit[,1] - (1.96 * preds_smooth$se.fit[,1])
   )
 
-# calcule des R^2 par sp
+# calculate R^2 by strand
 
-data_combier$preds <- predict(modele_combiné, type = "response")[,1]
+combined_data$preds <- predict(combined_model, type = "response")[,1]
 
-tableau_R2 <- data_combier %>%
-  group_by(brin) %>%
+table_R2 <- combined_data %>%
+  group_by(strand) %>%
   summarize(
     RSS = sum((score - preds)^2),                  
     TSS = sum((score - mean(score))^2),           
     R2  = round(1 - (RSS / TSS), 4)               
   )
 
-print(tableau_R2)
+print(table_R2)
 
-noms_legendes <- c(
-  "CTAC_antisens" = "Forward AAACTAC",
-  "CTAC_sens"     = "Reverse AAACTAC",
-  "CTAT_antisens" = "Foward AAACTAT",
-  "CTAT_sens"     = "Reverse AAACTAT"
+legend_names <- c(
+  "CTAC_antisense" = "Forward AAACTAC",
+  "CTAC_sense"     = "Reverse AAACTAC",
+  "CTAT_antisense" = "Foward AAACTAT",
+  "CTAT_sense"     = "Reverse AAACTAT"
 )
 
-p_val_brin <- anova$pTerms.pv[1]
+p_val_strand <- anova$pTerms.pv[1]
 
 #####################################################
 
 ploT_GAM <- ggplot() + 
   
-  geom_point(data = data_combier, 
-             aes(x = stade, y = score, colour = brin),
+  geom_point(data = combined_data, 
+             aes(x = stage, y = score, colour = strand),
              position = position_jitter(width = 0.05)) + 
   
   geom_ribbon(data = df_predict_combine, 
-              aes(x = stade, ymin = lower, ymax = upper, fill = brin), 
+              aes(x = stage, ymin = lower, ymax = upper, fill = strand), 
               alpha = 0.09) +
   
   geom_line(data = df_predict_combine, 
-            aes(x = stade, y = fit, colour = brin, linetype = brin),
+            aes(x = stage, y = fit, colour = strand, linetype = strand),
             linewidth = 1.2) +
   
   labs(
@@ -951,23 +938,23 @@ ploT_GAM <- ggplot() +
     colour = "LncRNA strand",
     linetype = "LncRNA strand" 
   ) +
-  scale_color_manual(labels = noms_legendes,
-                     values = c("CTAC_antisens" = "limegreen", 
-                                "CTAC_sens"     = "limegreen", 
-                                "CTAT_antisens" = "magenta", 
-                                "CTAT_sens"     = "magenta")) +
+  scale_color_manual(labels = legend_names,
+                     values = c("CTAC_antisense" = "limegreen", 
+                                "CTAC_sense"     = "limegreen", 
+                                "CTAT_antisense" = "magenta", 
+                                "CTAT_sense"     = "magenta")) +
   
-  scale_fill_manual(labels = noms_legendes,
-                    values = c("CTAC_antisens" = "limegreen", 
-                               "CTAC_sens"     = "limegreen", 
-                               "CTAT_antisens" = "magenta", 
-                               "CTAT_sens"     = "magenta")) +
+  scale_fill_manual(labels = legend_names,
+                    values = c("CTAC_antisense" = "limegreen", 
+                               "CTAC_sense"     = "limegreen", 
+                               "CTAT_antisense" = "magenta", 
+                               "CTAT_sense"     = "magenta")) +
   
-  scale_linetype_manual(labels = noms_legendes,
-                        values = c("CTAC_antisens" = "solid", 
-                                   "CTAC_sens"     = "dotted", 
-                                   "CTAT_antisens" = "solid", 
-                                   "CTAT_sens"     = "dotted")) +
+  scale_linetype_manual(labels = legend_names,
+                        values = c("CTAC_antisense" = "solid", 
+                                   "CTAC_sense"     = "dotted", 
+                                   "CTAT_antisense" = "solid", 
+                                   "CTAT_sense"     = "dotted")) +
   
   scale_x_continuous(breaks = seq(0, 10, by = 1)) +
   ylim(c(-0.5, 5)) + 
@@ -991,47 +978,47 @@ ploT_GAM <- ggplot() +
   annotate("rect", xmin = 6.5, xmax = Inf, ymin = 4.2, ymax = 5,
            alpha = 1, fill = "white") +
   
-  #annotate("text", x = Inf, y = Inf, label = paste0("Global ANOVA: p = ", format.pval(p_val_brin, digits = 2)), 
+  #annotate("text", x = Inf, y = Inf, label = paste0("Global ANOVA: p = ", format.pval(p_val_strand, digits = 2)), 
            #hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic") +
   
-  annotate("text", x = 8.5, y = 4.9, label = paste0("R² S.CTAC = ", round(tableau_R2[2,4], digits = 3), "***"), 
+  annotate("text", x = 8.5, y = 4.9, label = paste0("R² S.CTAC = ", round(table_R2[2,4], digits = 3), "***"), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "limegreen") + 
   
-  annotate("text", x = 8.5, y = 4.6, label = paste0("R² A.CTAC = ", round(tableau_R2[1,4], digits = 3), "***" ), 
+  annotate("text", x = 8.5, y = 4.6, label = paste0("R² A.CTAC = ", round(table_R2[1,4], digits = 3), "***" ), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "limegreen") +
   
-  annotate("text", x = Inf, y = 4.9, label = paste0("R² S.CTAT = ", round(tableau_R2[4,4], digits = 3), "***"), 
+  annotate("text", x = Inf, y = 4.9, label = paste0("R² S.CTAT = ", round(table_R2[4,4], digits = 3), "***"), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "magenta") + 
   
-  annotate("text", x = Inf, y = 4.6, label = paste0("R² A.CTAT = ", round(tableau_R2[3,4], digits = 3), "***" ), 
+  annotate("text", x = Inf, y = 4.6, label = paste0("R² A.CTAT = ", round(table_R2[3,4], digits = 3), "***" ), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "magenta")
   
 
 print(ploT_GAM)
 
-data_combiner_CTAC <- rbind(data_combier[data_combier$brin == "CTAC_antisens", ],
-                              data_combier[data_combier$brin == "CTAC_sens", ])
+combined_data_CTAC <- rbind(combined_data[combined_data$strand == "CTAC_antisense", ],
+                              combined_data[combined_data$strand == "CTAC_sense", ])
 
-df_predict_combiner_CTAC <- rbind(df_predict_combine[df_predict_combine$brin == "CTAC_antisens", ],
-                                  df_predict_combine[df_predict_combine$brin == "CTAC_sens", ])
+df_predict_combine_CTAC <- rbind(df_predict_combine[df_predict_combine$strand == "CTAC_antisense", ],
+                                  df_predict_combine[df_predict_combine$strand == "CTAC_sense", ])
 
 
-plot_GAM_CTAC_seul <- ggplot() + 
+plot_GAM_CTAC_only <- ggplot() + 
   
-  geom_point(data = data_combiner_CTAC, 
-             aes(x = stade, y = score, colour = brin),
+  geom_point(data = combined_data_CTAC, 
+             aes(x = stage, y = score, colour = strand),
              position = position_jitter(width = 0.05)) + 
   
-  geom_ribbon(data = df_predict_combiner_CTAC, 
-              aes(x = stade, ymin = lower, ymax = upper, fill = brin), 
+  geom_ribbon(data = df_predict_combine_CTAC, 
+              aes(x = stage, ymin = lower, ymax = upper, fill = strand), 
               alpha = 0.09) +
   
-  geom_line(data = df_predict_combiner_CTAC, 
-            aes(x = stade, y = fit, colour = brin, linetype = brin),
+  geom_line(data = df_predict_combine_CTAC, 
+            aes(x = stage, y = fit, colour = strand, linetype = strand),
             linewidth = 1.2) +
   
   labs(
@@ -1042,17 +1029,17 @@ plot_GAM_CTAC_seul <- ggplot() +
     colour = "LncRNA strand",
     linetype = "LncRNA strand" 
   ) +
-  scale_color_manual(labels = noms_legendes,
-                     values = c("CTAC_antisens" = "darkgreen", 
-                                "CTAC_sens"     = "limegreen")) +
+  scale_color_manual(labels = legend_names,
+                     values = c("CTAC_antisense" = "darkgreen", 
+                                "CTAC_sense"     = "limegreen")) +
   
-  scale_fill_manual(labels = noms_legendes,
-                    values = c("CTAC_antisens" = "darkgreen", 
-                               "CTAC_sens"     = "limegreen")) +
+  scale_fill_manual(labels = legend_names,
+                    values = c("CTAC_antisense" = "darkgreen", 
+                               "CTAC_sense"     = "limegreen")) +
   
-  scale_linetype_manual(labels = noms_legendes,
-                        values = c("CTAC_antisens" = "solid", 
-                                   "CTAC_sens"     = "dotted")) +
+  scale_linetype_manual(labels = legend_names,
+                        values = c("CTAC_antisense" = "solid", 
+                                   "CTAC_sense"     = "dotted")) +
   
   scale_x_continuous(breaks = seq(0, 10, by = 1)) +
   ylim(c(-0.5, 5)) + 
@@ -1076,45 +1063,45 @@ plot_GAM_CTAC_seul <- ggplot() +
   annotate("rect", xmin = 8.5, xmax = Inf, ymin = 4.2, ymax = 5,
            alpha = 1, fill = "white") +
   
-  #annotate("text", x = Inf, y = Inf, label = paste0("Global ANOVA: p = ", format.pval(p_val_brin, digits = 2)), 
+  #annotate("text", x = Inf, y = Inf, label = paste0("Global ANOVA: p = ", format.pval(p_val_strand, digits = 2)), 
   #hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic") +
   
-  annotate("text", x = Inf, y = 4.9, label = paste0("R² F.CTAC = ", round(tableau_R2[2,4], digits = 3), "***"), 
+  annotate("text", x = Inf, y = 4.9, label = paste0("R² F.CTAC = ", round(table_R2[2,4], digits = 3), "***"), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "darkgreen") + 
   
-  annotate("text", x = Inf, y = 4.6, label = paste0("R² R.CTAC = ", round(tableau_R2[1,4], digits = 3), "***" ), 
+  annotate("text", x = Inf, y = 4.6, label = paste0("R² R.CTAC = ", round(table_R2[1,4], digits = 3), "***" ), 
            hjust = 1.1, vjust = 1.5, size = 4, fontface = "italic",
            color = "limegreen") 
 
-print(plot_GAM_CTAC_seul)
+print(plot_GAM_CTAC_only)
 
 ############################################################
 
 
-tableau_pvalues <- data.frame()
+table_pvalues <- data.frame()
 
 for (s in 3:10) {
-  donnees_stade <- subset(data_combier, stade == s)
+  stage_data <- subset(combined_data, stage == s)
   
-  if(length(unique(donnees_stade$brin)) > 1) {
+  if(length(unique(stage_data$strand)) > 1) {
     
-    fit <- aov(score ~ brin, data = donnees_stade)
+    fit <- aov(score ~ strand, data = stage_data)
     
-    tukey <- TukeyHSD(fit)$brin
+    tukey <- TukeyHSD(fit)$strand
     
     temp <- data.frame(
-      Stade = s,
-      Comparaison = rownames(tukey),
+      Stage = s,
+      Comparison = rownames(tukey),
       p_value = round(tukey[, "p adj"], 4)
     )
-    tableau_pvalues <- rbind(tableau_pvalues, temp)
+    table_pvalues <- rbind(table_pvalues, temp)
   }
 }
 
-print(tableau_pvalues)
+print(table_pvalues)
 
-signif_data <- tableau_pvalues %>%
+signif_data <- table_pvalues %>%
   filter(p_value < 0.05) %>%
   mutate(
     label = case_when(
@@ -1124,20 +1111,3 @@ signif_data <- tableau_pvalues %>%
       TRUE ~ "ns"
     )
   )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
